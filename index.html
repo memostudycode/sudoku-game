@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sudoku</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system}
+body{padding:24px;display:flex;flex-direction:column;align-items:center;background:#f7f8fa;gap:16px;}
+
+/* 恢复对局弹窗 */
+.resume-modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.55);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:999;
+}
+.resume-box{
+  background:#fff;
+  padding:24px 28px;
+  border-radius:12px;
+  text-align:center;
+  max-width:340px;
+}
+.resume-box p{
+  font-size:16px;
+  margin-bottom:18px;
+  line-height:1.5;
+}
+.resume-buttons{
+  display:flex;
+  gap:12px;
+  justify-content:center;
+}
+.resume-buttons button{
+  padding:8px 18px;
+  border-radius:6px;
+  border:none;
+  cursor:pointer;
+  font-size:15px;
+}
+.btn-continue{
+  background:#2554cc;
+  color:white;
+}
+.btn-restart{
+  background:#e4e7ec;
+}
+.hidden{
+  display:none !important;
+}
+
+/* 顶部通栏 */
+.top-bar{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:16px;
+  flex-wrap:wrap;
+  width:100%;
+  max-width:860px;
+}
+.diff-bar{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-size:17px;
+  color:#718096;
+  flex-wrap:wrap;
+}
+.diff-item{
+  cursor:pointer;
+}
+.diff-item.active{
+  color:#2554cc;
+  font-weight:bold;
+  position:relative;
+}
+.diff-item.active::after{
+  content:"";
+  position:absolute;
+  bottom:-4px;
+  left:0;
+  width:100%;
+  height:3px;
+  background-color:#2554cc;
+}
+.status-bar{
+  display:flex;
+  gap:16px;
+  font-size:17px;
+  align-items:center;
+}
+.mode-bar{
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+.mode-btn{
+  border:1px solid #cbd5e1;
+  padding:4px 10px;
+  border-radius:6px;
+  cursor:pointer;
+  background:#fff;
+}
+.mode-btn.active{
+  background:#2554cc;
+  color:white;
+  border-color:#2554cc;
+}
+.timer-ctrl-bar{
+  display:flex;
+  gap:6px;
+}
+.timer-ctrl-bar button{
+  padding:3px 8px;
+  border-radius:4px;
+  border:1px solid #cbd5e1;
+  cursor:pointer;
+}
+
+/* 主体左右布局：棋盘 | 控制面板+历史 */
+.main-wrap{
+  display:flex;
+  gap:28px;
+  align-items:flex-start;
+}
+
+/* 棋盘 */
+.board{
+  display:grid;
+  grid-template-columns:repeat(9,1fr);
+  grid-template-rows:repeat(9,1fr);
+  width:480px;
+  aspect-ratio:1/1;
+  border:3px solid #222;
+}
+.cell{
+  border:1px solid #cccccc;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:clamp(22px,5vw,32px);
+  cursor:pointer;
+  position:relative;
+  background:#ffffff;
+  min-height:0;
+  min-width:0;
+}
+.cell:nth-child(3n):not(:nth-child(9n)){border-right:3px solid #222;}
+.cell:nth-child(n+19):nth-child(-n+27),
+.cell:nth-child(n+46):nth-child(-n+54){border-bottom:3px solid #222;}
+
+.cell.selected{background:#b8d4ff;}
+.cell.highlight-row{background:#e6f0ff;}
+.cell.highlight-col{background:#e6f0ff;}
+.cell.highlight-box{background:#e6f0ff;}
+.cell.error{background:#ffd6d6 !important;color:#c00;}
+
+.cell.given{color:#111;font-weight:bold;}
+.cell.user-input{color:#2563eb;}
+
+.note-text{
+  position:absolute;
+  top:4px;
+  left:4px;
+  font-size:11px;
+  color:#777;
+  pointer-events:none;
+}
+
+/* 右侧面板 */
+.panel-right{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  width:240px;
+}
+.tool-bar{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.tool-bar button{
+  padding:12px 6px;
+  border-radius:8px;
+  border:none;
+  font-size:15px;
+  cursor:pointer;
+  background:#e4e7ec;
+}
+.tool-bar button.active{
+  background:#b8d4ff;
+}
+
+.num-panel{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+}
+.num-panel button{
+  padding:14px 0;
+  font-size:24px;
+  border:none;
+  border-radius:8px;
+  background:#e4e7ec;
+  cursor:pointer;
+}
+.num-panel button:hover{background:#d0d5dd;}
+
+/* History专区 */
+.history-box{
+  background:#ffffff;
+  border:1px solid #e2e8f0;
+  border-radius:10px;
+  padding:14px;
+}
+.history-box h4{
+  margin-bottom:10px;
+  font-size:16px;
+}
+.history-item{
+  font-size:14px;
+  line-height:1.7;
+}
+
+.msg{
+  font-size:16px;
+  min-height:24px;
+}
+
+@media(max-width:820px){
+  .main-wrap{flex-direction:column;align-items:center;}
+  .board{width:85vmin;max-width:420px;}
+  .panel-right{width:85vmin;max-width:420px;}
+  .num-panel{grid-template-columns:repeat(5,1fr);}
+}
+</style>
+</head>
+<body>
+
+<!-- 恢复对局弹窗 -->
+<div class="resume-modal hidden" id="resumeModal">
+  <div class="resume-box">
+    <p>Your last game is not finished.Choose to restart or continue.</p>
+    <div class="resume-buttons">
+      <button class="btn-continue" id="continueBtn">Continue</button>
+      <button class="btn-restart" id="restartBtn">Restart</button>
+    </div>
+  </div>
+</div>
+
+<div class="top-bar">
+  <div class="diff-bar">
+    <span>Difficulty:</span>
+    <span class="diff-item active" data-diff="easy">Easy</span>
+    <span class="diff-item" data-diff="medium">Medium</span>
+    <span class="diff-item" data-diff="hard">Hard</span>
+    <span class="diff-item" data-diff="expert">Expert</span>
+    <span class="diff-item" data-diff="master">Master</span>
+    <span class="diff-item" data-diff="extreme">Extreme</span>
+  </div>
+  <div class="mode-bar">
+    <button class="mode-btn active" id="practiceModeBtn">Practice Mode</button>
+    <button class="mode-btn" id="timeModeBtn">Time Mode</button>
+    <div class="timer-ctrl-bar">
+      <button id="timerStartBtn" disabled>▶ Start</button>
+      <button id="timerPauseBtn" disabled>⏸ Pause</button>
+    </div>
+  </div>
+  <div class="status-bar">
+    <div id="mistakeText">Mistake: 0 /5</div>
+    <div id="hintText">Hint left: 3</div>
+    <div id="timerText">Time: --:--</div>
+  </div>
+</div>
+
+<div class="main-wrap">
+  <div>
+    <div class="board" id="board"></div>
+    <div class="msg" id="msg" style="margin-top:10px;text-align:center;"></div>
+  </div>
+
+  <div class="panel-right">
+    <div class="tool-bar">
+      <button id="pencilBtn">✏️ Pencil OFF</button>
+      <button id="hintBtn">💡 Hint</button>
+      <button id="undoBtn">↩ Undo</button>
+      <button id="checkBtn">✅ Check</button>
+      <button id="submitBtn">🚀 Submit</button>
+    </div>
+    <div class="num-panel">
+      <button data-num="1">1</button>
+      <button data-num="2">2</button>
+      <button data-num="3">3</button>
+      <button data-num="4">4</button>
+      <button data-num="5">5</button>
+      <button data-num="6">6</button>
+      <button data-num="7">7</button>
+      <button data-num="8">8</button>
+      <button data-num="9">9</button>
+      <button data-num="0">⨯</button>
+    </div>
+    <div class="history-box">
+      <h4>📜 History</h4>
+      <div class="history-item">FASTEST: <span id="fastestVal">--:--</span></div>
+      <div class="history-item">Total playing times: <span id="totalPlayVal">0</span></div>
+      <div class="history-item">STAR records: <span id="starRecordVal">0</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ========== 无限动态数独生成算法（挖洞+唯一解校验） ==========
+function isValid(grid, r, c, n) {
+  for(let i=0;i<9;i++) if(grid[r][i]===n || grid[i][c]===n) return false;
+  const br=Math.floor(r/3)*3, bc=Math.floor(c/3)*3;
+  for(let dr=0;dr<3;dr++) for(let dc=0;dc<3;dc++) if(grid[br+dr][bc+dc]===n) return false;
+  return true;
+}
+
+// 生成完整随机终盘
+function generateFullBoard(){
+  const g = Array.from({length:9},()=>Array(9).fill(0));
+  function dfs(){
+    for(let r=0;r<9;r++){
+      for(let c=0;c<9;c++){
+        if(g[r][c]===0){
+          const nums = [1,2,3,4,5,6,7,8,9].sort(()=>Math.random()-0.5);
+          for(let n of nums){
+            if(isValid(g,r,c,n)){
+              g[r][c]=n;
+              if(dfs()) return true;
+              g[r][c]=0;
+            }
+          }
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+  dfs();
+  return g;
+}
+
+// 统计解的数量，最多找到2个就返回，用于唯一解校验
+function countSolutions(grid){
+  const g = grid.map(r=>[...r]);
+  let cnt = 0;
+  function dfs(){
+    if(cnt>=2) return;
+    for(let r=0;r<9;r++){
+      for(let c=0;c<9;c++){
+        if(g[r][c]===0){
+          for(let n=1;n<=9;n++){
+            if(isValid(g,r,c,n)){
+              g[r][c]=n;
+              dfs();
+              g[r][c]=0;
+            }
+          }
+          return;
+        }
+      }
+    }
+    cnt+=1;
+  }
+  dfs();
+  return cnt;
+}
+
+// 根据难度挖洞，保证唯一解
+const holeConfig = {
+  easy:36,
+  medium:44,
+  hard:52,
+  expert:58,
+  master:62,
+  extreme:66
+};
+function generatePuzzle(diff){
+  const full = generateFullBoard();
+  const puzzle = full.map(r=>[...r]);
+  const holes = holeConfig[diff];
+  let positions = [];
+  for(let i=0;i<81;i++) positions.push(i);
+  positions.sort(()=>Math.random()-0.5);
+  let removed = 0;
+  for(let pos of positions){
+    if(removed>=holes) break;
+    const r = Math.floor(pos/9);
+    const c = pos%9;
+    const backup = puzzle[r][c];
+    puzzle[r][c]=0;
+    if(countSolutions(puzzle)!==1){
+      puzzle[r][c]=backup;
+    }else{
+      removed++;
+    }
+  }
+  return {puzzle, solution:full};
+}
+
+// 全局游戏状态
+let currentDiff = "easy";
+let puzzle;
+let boardData;
+let solution;
+let selectedCell = null;
+let selectedRow = null, selectedCol = null;
+let noteMode = false;
+let historyStack = [];
+let mistakeCount = 0;
+const MAX_MISTAKE = 5;
+let hintRemain = 3;
+
+// 计时状态
+let isTimeMode = false;
+let timerStartTs = null;
+let timerInterval = null;
+let timerPausedSeconds = 0;
+let timerRunning = false;
+
+// 历史统计 & 未完成对局缓存
+let gameStats = JSON.parse(localStorage.getItem("sudokuStats")||`{"fastest":null,"totalPlay":0,"starRec":0}`);
+const SAVE_GAME_KEY = "sudokuUnfinishedGame";
+
+const boardEl = document.getElementById("board");
+const pencilBtn = document.getElementById("pencilBtn");
+const hintBtn = document.getElementById("hintBtn");
+const undoBtn = document.getElementById("undoBtn");
+const checkBtn = document.getElementById("checkBtn");
+const submitBtn = document.getElementById("submitBtn");
+const msgEl = document.getElementById("msg");
+const mistakeTextEl = document.getElementById("mistakeText");
+const hintTextEl = document.getElementById("hintText");
+const timerTextEl = document.getElementById("timerText");
+const practiceModeBtn = document.getElementById("practiceModeBtn");
+const timeModeBtn = document.getElementById("timeModeBtn");
+const timerStartBtn = document.getElementById("timerStartBtn");
+const timerPauseBtn = document.getElementById("timerPauseBtn");
+
+const fastestValEl = document.getElementById("fastestVal");
+const totalPlayValEl = document.getElementById("totalPlayVal");
+const starRecordValEl = document.getElementById("starRecordVal");
+
+const resumeModal = document.getElementById("resumeModal");
+const continueBtn = document.getElementById("continueBtn");
+const restartBtn = document.getElementById("restartBtn");
+
+function formatTime(secTotal){
+  const m = Math.floor(secTotal/60);
+  const s = secTotal % 60;
+  return `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+}
+function renderStatsUI(){
+  totalPlayValEl.textContent = gameStats.totalPlay;
+  starRecordValEl.textContent = gameStats.starRec;
+  fastestValEl.textContent = gameStats.fastest ? formatTime(gameStats.fastest) : "--:--";
+}
+function saveStats(){
+  localStorage.setItem("sudokuStats",JSON.stringify(gameStats));
+  renderStatsUI();
+}
+
+// 对局缓存
+function saveUnfinishedGame(){
+  const saveObj = {
+    currentDiff,
+    puzzle,
+    boardData,
+    solution,
+    mistakeCount,
+    hintRemain,
+    isTimeMode,
+    timerStartTs,
+    timerPausedSeconds,
+    timerRunning,
+    historyStack
+  };
+  localStorage.setItem(SAVE_GAME_KEY, JSON.stringify(saveObj));
+}
+function clearUnfinishedGame(){
+  localStorage.removeItem(SAVE_GAME_KEY);
+}
+function getUnfinishedGame(){
+  const raw = localStorage.getItem(SAVE_GAME_KEY);
+  if(!raw) return null;
+  try{ return JSON.parse(raw); }catch(e){ return null; }
+}
+
+// 计时器控制
+function resetTimerUI(){
+  stopTimer();
+  timerStartTs = null;
+  timerPausedSeconds = 0;
+  timerRunning = false;
+  timerTextEl.textContent = "Time: --:--";
+  timerStartBtn.disabled = !isTimeMode;
+  timerPauseBtn.disabled = true;
+}
+function startTimerLogic(){
+  if(timerRunning) return;
+  if(!timerStartTs){
+    timerStartTs = Date.now();
+  }else{
+    timerStartTs = Date.now() - timerPausedSeconds*1000;
+  }
+  timerRunning = true;
+  timerStartBtn.disabled = true;
+  timerPauseBtn.disabled = false;
+  timerInterval = setInterval(()=>{
+    const sec = Math.floor((Date.now() - timerStartTs)/1000);
+    timerTextEl.textContent = `Time: ${formatTime(sec)}`;
+    saveUnfinishedGame();
+  },1000);
+}
+function pauseTimerLogic(){
+  if(!timerRunning) return;
+  timerPausedSeconds = Math.floor((Date.now()-timerStartTs)/1000);
+  stopTimer();
+  timerRunning = false;
+  timerStartBtn.disabled = false;
+  timerPauseBtn.disabled = true;
+  saveUnfinishedGame();
+}
+function stopTimer(){
+  if(timerInterval){
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+}
+function getCurrentTimerSeconds(){
+  if(!timerStartTs) return timerPausedSeconds||0;
+  return timerRunning ? Math.floor((Date.now()-timerStartTs)/1000) : timerPausedSeconds;
+}
+
+// 模式切换
+practiceModeBtn.addEventListener("click",()=>{
+  isTimeMode = false;
+  practiceModeBtn.classList.add("active");
+  timeModeBtn.classList.remove("active");
+  resetTimerUI();
+  saveUnfinishedGame();
+});
+timeModeBtn.addEventListener("click",()=>{
+  isTimeMode = true;
+  practiceModeBtn.classList.remove("active");
+  timeModeBtn.classList.add("active");
+  timerStartBtn.disabled = false;
+  saveUnfinishedGame();
+});
+timerStartBtn.addEventListener("click",startTimerLogic);
+timerPauseBtn.addEventListener("click",pauseTimerLogic);
+
+function updateStatusUI(){
+  mistakeTextEl.textContent = `Mistake: ${mistakeCount} /${MAX_MISTAKE}`;
+  hintTextEl.textContent = `Hint left: ${hintRemain}`;
+}
+function showMsg(text){ msgEl.textContent = text; }
+function saveSnapshot(){
+  historyStack.push(JSON.parse(JSON.stringify(boardData)));
+  if(historyStack.length>50) historyStack.shift();
+  saveUnfinishedGame();
+}
+function undo(){
+  if(historyStack.length===0){ showMsg("Nothing to undo"); return; }
+  boardData = historyStack.pop();
+  renderBoard(); showMsg("Undone");
+  saveUnfinishedGame();
+}
+
+function renderBoard(){
+  boardEl.innerHTML = "";
+  for(let r=0;r<9;r++){
+    for(let c=0;c<9;c++){
+      const div = document.createElement("div");
+      div.className = "cell";
+      div.dataset.row = r;
+      div.dataset.col = c;
+      const origVal = puzzle[r][c];
+      const currVal = boardData[r][c];
+      if(origVal!==0){
+        div.textContent = origVal;
+        div.classList.add("given");
+      }else if(currVal!==0){
+        div.textContent = currVal;
+        div.classList.add("user-input");
+      }
+      boardEl.appendChild(div);
+      div.addEventListener("click",()=>handleCellClick(div,r,c));
+    }
+  }
+  clearAllHighlight();
+  updateStatusUI();
+}
+function clearAllHighlight(){
+  document.querySelectorAll(".cell").forEach(el=>{
+    el.classList.remove("selected","highlight-row","highlight-col","highlight-box","error");
+  })
+}
+function handleCellClick(cellDom,r,c){
+  clearAllHighlight();
+  selectedCell = cellDom;
+  selectedRow = r;
+  selectedCol = c;
+  cellDom.classList.add("selected");
+  document.querySelectorAll(`.cell[data-row="${r}"]`).forEach(el=>el.classList.add("highlight-row"));
+  document.querySelectorAll(`.cell[data-col="${c}"]`).forEach(el=>el.classList.add("highlight-col"));
+  const boxR = Math.floor(r/3)*3;
+  const boxC = Math.floor(c/3)*3;
+  for(let dr=0;dr<3;dr++){
+    for(let dc=0;dc<3;dc++){
+      const rr = boxR+dr;
+      const cc = boxC+dc;
+      document.querySelector(`.cell[data-row="${rr}"][data-col="${cc}"]`).classList.add("highlight-box");
+    }
+  }
+}
+
+hintBtn.addEventListener("click",()=>{
+  if(!selectedCell){ showMsg("Select a cell first"); return; }
+  if(hintRemain<=0){ showMsg("No hints left"); return; }
+  const r = selectedRow;
+  const c = selectedCol;
+  if(puzzle[r][c]!==0){ showMsg("Cannot hint given cell"); return; }
+  saveSnapshot();
+  boardData[r][c] = solution[r][c];
+  hintRemain -=1;
+  renderBoard();
+  showMsg("Hint applied");
+  saveUnfinishedGame();
+})
+
+pencilBtn.addEventListener("click",()=>{
+  noteMode = !noteMode;
+  pencilBtn.textContent = noteMode ? "✏️ Pencil ON":"✏️ Pencil OFF";
+  pencilBtn.classList.toggle("active",noteMode);
+})
+undoBtn.addEventListener("click",undo);
+
+document.querySelectorAll(".num-panel button").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    if(!selectedCell) return;
+    const num = Number(btn.dataset.num);
+    const r = selectedRow;
+    const c = selectedCol;
+    if(puzzle[r][c]!==0){ showMsg("Given cell cannot edit"); return; }
+    saveSnapshot();
+    if(num===0){
+      boardData[r][c]=0;
+      renderBoard(); showMsg("");
+      saveUnfinishedGame();
+      return;
+    }
+    if(!noteMode){
+      if(num !== solution[r][c]){
+        mistakeCount +=1;
+        if(mistakeCount >= MAX_MISTAKE) showMsg("Game over, too many mistakes");
+      }
+      boardData[r][c]=num;
+      renderBoard();
+      saveUnfinishedGame();
+    }else{
+      const cellDom = selectedCell;
+      let noteSpan = cellDom.querySelector(".note-text");
+      if(!noteSpan){
+        noteSpan = document.createElement("span");
+        noteSpan.className="note-text";
+        cellDom.appendChild(noteSpan);
+      }
+      let arr = noteSpan.textContent ? noteSpan.textContent.split("/") : [];
+      if(!arr.includes(String(num))) arr.push(String(num));
+      noteSpan.textContent = arr.join("/");
+    }
+  })
+})
+
+checkBtn.addEventListener("click",()=>{
+  clearAllHighlight();
+  let hasError = false;
+  for(let r=0;r<9;r++){
+    for(let c=0;c<9;c++){
+      const val = boardData[r][c];
+      if(val===0) continue;
+      for(let cc=0;cc<9;cc++){
+        if(cc!==c && boardData[r][cc]===val){
+          document.querySelector(`.cell[data-row="${r}"][data-col="${c}"]`).classList.add("error");
+          hasError=true;
+        }
+      }
+      for(let rr=0;rr<9;rr++){
+        if(rr!==r && boardData[rr][c]===val){
+          document.querySelector(`.cell[data-row="${r}"][data-col="${c}"]`).classList.add("error");
+          hasError=true;
+        }
+      }
+      const br = Math.floor(r/3)*3;
+      const bc = Math.floor(c/3)*3;
+      for(let dr=0;dr<3;dr++){
+        for(let dc=0;dc<3;dc++){
+          const rr=br+dr; const cc=bc+dc;
+          if((rr!==r||cc!==c) && boardData[rr][cc]===val){
+            document.querySelector(`.cell[data-row="${r}"][data-col="${c}"]`).classList.add("error");
+            hasError=true;
+          }
+        }
+      }
+    }
+  }
+  showMsg(hasError?"❌ Conflicts found, check red cells":"✅ No conflicts detected");
+})
+
+submitBtn.addEventListener("click",()=>{
+  for(let r=0;r<9;r++) for(let c=0;c<9;c++) if(boardData[r][c]===0){
+    showMsg("⚠️ Fill all cells before submit");
+    return;
+  }
+  let ok = true;
+  outer:for(let r=0;r<9;r++){
+    for(let c=0;c<9;c++){
+      const val = boardData[r][c];
+      for(let cc=0;cc<9;cc++) if(cc!==c && boardData[r][cc]===val){ ok=false;break outer; }
+      for(let rr=0;rr<9;rr++) if(rr!==r && boardData[rr][c]===val){ ok=false;break outer; }
+      const br = Math.floor(r/3)*3;
+      const bc = Math.floor(c/3)*3;
+      for(let dr=0;dr<3;dr++){
+        for(let dc=0;dc<3;dc++){
+          const rr=br+dr; const cc=bc+dc;
+          if((rr!==r||cc!==c) && boardData[rr][cc]===val){ ok=false;break outer; }
+        }
+      }
+    }
+  }
+  if(ok){
+    showMsg("🎉 Congratulations! Puzzle solved");
+    gameStats.totalPlay +=1;
+    if(isTimeMode){
+      pauseTimerLogic();
+      const usedSec = getCurrentTimerSeconds();
+      if(gameStats.fastest===null || usedSec < gameStats.fastest){
+        gameStats.fastest = usedSec;
+      }
+      gameStats.starRec +=1;
+    }
+    saveStats();
+    clearUnfinishedGame();
+  }else{
+    showMsg("❌ Has conflicts, click Check to find errors");
+  }
+})
+
+// 切换难度：动态生成新题
+document.querySelectorAll(".diff-item").forEach(el=>{
+  el.addEventListener("click",()=>{
+    document.querySelectorAll(".diff-item").forEach(x=>x.classList.remove("active"));
+    el.classList.add("active");
+    currentDiff = el.dataset.diff;
+    const gen = generatePuzzle(currentDiff);
+    puzzle = gen.puzzle;
+    solution = gen.solution;
+    boardData = JSON.parse(JSON.stringify(puzzle));
+    historyStack = [];
+    mistakeCount = 0;
+    hintRemain = 3;
+    selectedCell=null;selectedRow=null;selectedCol=null;
+    resetTimerUI();
+    renderBoard();
+    showMsg(`New ${currentDiff} puzzle generated`);
+    saveUnfinishedGame();
+  })
+})
+
+// 弹窗按钮
+continueBtn.addEventListener("click",()=>{
+  resumeModal.classList.add("hidden");
+  renderBoard();
+  if(isTimeMode && timerRunning) startTimerLogic();
+});
+restartBtn.addEventListener("click",()=>{
+  resumeModal.classList.add("hidden");
+  clearUnfinishedGame();
+  currentDiff = "easy";
+  document.querySelectorAll(".diff-item").forEach(x=>x.classList.remove("active"));
+  document.querySelector('.diff-item[data-diff="easy"]').classList.add("active");
+  const gen = generatePuzzle(currentDiff);
+  puzzle = gen.puzzle;
+  solution = gen.solution;
+  boardData = JSON.parse(JSON.stringify(puzzle));
+  historyStack = [];
+  mistakeCount = 0;
+  hintRemain = 3;
+  selectedCell=null;selectedRow=null;selectedCol=null;
+  isTimeMode = false;
+  practiceModeBtn.classList.add("active");
+  timeModeBtn.classList.remove("active");
+  resetTimerUI();
+  renderBoard();
+  showMsg("New game started");
+  saveUnfinishedGame();
+});
+
+// 初始化
+function initGame(){
+  const unfinished = getUnfinishedGame();
+  if(unfinished){
+    resumeModal.classList.remove("hidden");
+    currentDiff = unfinished.currentDiff;
+    puzzle = unfinished.puzzle;
+    boardData = unfinished.boardData;
+    solution = unfinished.solution;
+    mistakeCount = unfinished.mistakeCount;
+    hintRemain = unfinished.hintRemain;
+    isTimeMode = unfinished.isTimeMode;
+    timerStartTs = unfinished.timerStartTs;
+    timerPausedSeconds = unfinished.timerPausedSeconds||0;
+    timerRunning = unfinished.timerRunning||false;
+    historyStack = unfinished.historyStack || [];
+
+    document.querySelectorAll(".diff-item").forEach(x=>x.classList.remove("active"));
+    document.querySelector(`.diff-item[data-diff="${currentDiff}"]`).classList.add("active");
+
+    if(isTimeMode){
+      practiceModeBtn.classList.remove("active");
+      timeModeBtn.classList.add("active");
+      timerStartBtn.disabled = timerRunning;
+      timerPauseBtn.disabled = !timerRunning;
+    }else{
+      practiceModeBtn.classList.add("active");
+      timeModeBtn.classList.remove("active");
+    }
+    const sec = getCurrentTimerSeconds();
+    timerTextEl.textContent = timerRunning ? `Time: ${formatTime(sec)}` : `Time: ${formatTime(sec)}`;
+  }else{
+    const gen = generatePuzzle(currentDiff);
+    puzzle = gen.puzzle;
+    solution = gen.solution;
+    boardData = JSON.parse(JSON.stringify(puzzle));
+    saveUnfinishedGame();
+  }
+  renderBoard();
+  renderStatsUI();
+}
+initGame();
+</script>
+</body>
+</html>
+
