@@ -81,4 +81,5 @@ Click difficulty label on top bar, new puzzle will generate instantly.
 
 ## 📂 Project Structure
 sudoku‑web/
+
 └── index.html # All source: HTML + CSS + JS
