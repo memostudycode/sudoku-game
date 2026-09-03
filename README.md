@@ -45,7 +45,7 @@ Game progress, fastest record, total plays and unfinished game state persist via
 3. Go to repo → **Settings → Pages**
 4. Source: `Deploy from a branch`; select `main` branch, folder `/ (root)`
 5. Save, wait for deployment, your Sudoku website is live.
-
+6. please visit https://memostudycode.github.io/sudoku-game/ .
 > Because everything runs client‑side, Pages works perfectly without backend.
 
 ## 🎮 Usage Guide
@@ -80,3 +80,5 @@ Click difficulty label on top bar, new puzzle will generate instantly.
 > Higher difficulty (Master / Extreme) brings heavier computation; tiny browser freeze during generation is expected.
 
 ## 📂 Project Structure
+sudoku‑web/
+└── index.html # All source: HTML + CSS + JS
