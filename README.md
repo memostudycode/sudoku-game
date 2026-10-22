@@ -29,6 +29,14 @@ Game progress, fastest record, total plays and unfinished game state persist via
 - In‑board conflict check & final submit validation
 - Mistake counter (max 5 mistakes)
 - Local statistics: fastest time, total play count, solved records
+- Separate game and records panels; the page opens in an unstarted state, without generating a puzzle
+- Completion history, duration, mode, and score saved persistently in browser `localStorage` without an automatic record limit
+- Theme-matched PNG export of the records panel (no PDF or server-side features)
+- Interface available in English, Simplified Chinese, Japanese, and Korean
+- Persistent light and dark themes
+- Responsive, high-contrast Sudoku grid with clearer 3×3 box separators
+- Accessible quick guide available from the `?` help button
+- Keyboard navigation and number entry on the Sudoku grid
 - Row / column / 3×3 box cell highlight
 - Fully responsive layout (desktop & mobile)
 - Zero dependencies, single HTML file, ready for GitHub Pages
@@ -52,24 +60,35 @@ Game progress, fastest record, total plays and unfinished game state persist via
 ### Difficulty Switch
 Click difficulty label on top bar, new puzzle will generate instantly.
 
+### Language & Theme
+Use the language selector to switch the interface between English, Simplified Chinese, Japanese, and Korean. Use the theme switch to toggle light or dark mode. Both settings are saved in browser `localStorage` and restored on your next visit.
+
 ### Game Modes
 1. **Practice Mode**: default, timer disabled.
 2. **Time Mode**: switch mode, then click `▶ Start` to begin timing. Use `⏸ Pause` to freeze timer. Timer will **not auto‑run after mode switch**.
 
 ### Operations
 - Click cell for selection; related row / column / box gets highlighted.
+- Use the arrow keys to move between cells; press `1`–`9` to enter a number, or `Backspace` / `Delete` to clear.
 - Number panel for input; `⨯` clears cell content.
 - `✏️ Pencil`: toggle note mode for candidate numbers.
 - `↩ Undo`: revert last operation.
 - `💡 Hint`: fill correct value for selected cell (limited count).
 - `✅ Check`: scan board and mark conflict cells.
 - `🚀 Submit`: final validation, requires full board filled.
+- Click `?` / **How to play** for a translated guide to the controls and game rules. Press `Escape` to close it.
 
 ### Persistent Behaviour
 - Unfinished game auto‑saved to browser localStorage.
-- Re‑open page shows modal: `Continue` / `Restart`.
-- Statistics persist across browser sessions.
+- Exit a game at any time; it is saved and can be resumed from the start screen.
+- Re-open page starts at the unstarted screen; continue a saved game or start a new one.
+- Every completed game is appended to browser-local history with its mode, difficulty, duration, mistakes, hints, completion date, and score.
+- Scores start from difficulty points (`Easy` 100 through `Extreme` 350), then subtract one point per elapsed minute, 10 per mistake, and 15 per hint used (minimum 0).
+- Click **Export game records (PNG)** to download a themed image of the history panel. The export is generated entirely in the browser.
+- Exiting pauses and saves the current game; choose **Continue saved game** from the start screen to resume it. Completed games return to the start screen and are added to history.
 - Clearing browser storage wipes all local progress.
+
+> There is no account, backend, or database. Game saves, settings, and records never leave this browser.
 
 ## ⚙️ Algorithm Brief
 1. **Full board generation**: DFS backtracking with random shuffle to build complete valid 9×9 solution.

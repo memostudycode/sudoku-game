@@ -5,21 +5,82 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sudoku</title>
 <style>
+:root{
+  color-scheme:light;
+  --page-bg:#f7f8fa;
+  --surface:#ffffff;
+  --text:#1f2937;
+  --muted:#718096;
+  --border:#cbd5e1;
+  --grid:#222222;
+  --cell-border:#cccccc;
+  --accent:#2554cc;
+  --accent-text:#ffffff;
+  --control:#e4e7ec;
+  --control-hover:#d0d5dd;
+  --selected:#b8d4ff;
+  --highlight:#e6f0ff;
+  --given:#111111;
+  --user-input:#2563eb;
+  --note:#777777;
+  --error-bg:#ffd6d6;
+  --error-text:#c00;
+  --modal-backdrop:rgba(0,0,0,0.55);
+  --surface-soft:#f1f5f9;
+  --shadow:0 12px 32px rgba(15,23,42,0.09);
+  --shadow-small:0 4px 12px rgba(15,23,42,0.07);
+  --box-line:#475569;
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --page-bg:#111827;
+  --surface:#1f2937;
+  --text:#e5e7eb;
+  --muted:#a0aec0;
+  --border:#4b5563;
+  --grid:#9ca3af;
+  --cell-border:#4b5563;
+  --accent:#7da2ff;
+  --accent-text:#111827;
+  --control:#374151;
+  --control-hover:#4b5563;
+  --selected:#294b7a;
+  --highlight:#24364f;
+  --given:#f9fafb;
+  --user-input:#93c5fd;
+  --note:#cbd5e1;
+  --error-bg:#632f37;
+  --error-text:#fecaca;
+  --modal-backdrop:rgba(0,0,0,0.72);
+  --surface-soft:#273449;
+  --shadow:0 12px 32px rgba(0,0,0,0.28);
+  --shadow-small:0 4px 12px rgba(0,0,0,0.2);
+  --box-line:#94a3b8;
+}
 *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system}
-body{padding:24px;display:flex;flex-direction:column;align-items:center;background:#f7f8fa;gap:16px;}
+body{min-height:100vh;padding:28px 20px 36px;display:flex;flex-direction:column;align-items:center;background:radial-gradient(ellipse at top left,color-mix(in srgb,var(--accent) 10%,var(--page-bg)),var(--page-bg) 55%);color:var(--text);gap:18px;transition:background-color .2s ease,color .2s ease}
+button,select{font:inherit;color:inherit}
+button,select{transition:background-color .16s ease,border-color .16s ease,transform .16s ease,box-shadow .16s ease}
+button:focus-visible,select:focus-visible,.diff-item:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+button:not(:disabled):active{transform:translateY(1px)}
+button:disabled{cursor:not-allowed;opacity:.55}
 
 /* 恢复对局弹窗 */
 .resume-modal{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,0.55);
+  background:var(--modal-backdrop);
   display:flex;
   align-items:center;
   justify-content:center;
   z-index:999;
 }
+.resume-box,.help-box{
+  box-shadow:var(--shadow);
+}
 .resume-box{
-  background:#fff;
+  background:var(--surface);
+  color:var(--text);
   padding:24px 28px;
   border-radius:12px;
   text-align:center;
@@ -43,15 +104,92 @@ body{padding:24px;display:flex;flex-direction:column;align-items:center;backgrou
   font-size:15px;
 }
 .btn-continue{
-  background:#2554cc;
-  color:white;
+  background:var(--accent);
+  color:var(--accent-text);
 }
 .btn-restart{
-  background:#e4e7ec;
+  background:var(--control);
 }
 .hidden{
   display:none !important;
 }
+.brand-bar{
+  width:100%;
+  max-width:1040px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+}
+.brand-lockup{display:flex;align-items:center;gap:12px}
+.brand-mark{
+  display:grid;
+  grid-template-columns:repeat(3,7px);
+  grid-template-rows:repeat(3,7px);
+  gap:3px;
+  padding:10px;
+  border-radius:14px;
+  background:linear-gradient(145deg,var(--accent),color-mix(in srgb,var(--accent) 65%,#a78bfa));
+  box-shadow:var(--shadow-small);
+}
+.brand-mark span{border-radius:2px;background:rgba(255,255,255,.92)}
+.brand-mark span:nth-child(5){background:rgba(255,255,255,.52)}
+.brand-copy h1{font-size:25px;line-height:1.15;letter-spacing:-.04em}
+.brand-copy p{margin-top:3px;color:var(--muted);font-size:13px}
+.help-trigger{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:9px 14px;
+  border:1px solid var(--border);
+  border-radius:999px;
+  background:var(--surface);
+  box-shadow:var(--shadow-small);
+  cursor:pointer;
+  font-weight:650;
+}
+.help-trigger:hover,.theme-switch:hover,.setting-control select:hover{border-color:var(--accent)}
+.help-mark{
+  display:inline-grid;
+  width:24px;height:24px;
+  place-items:center;
+  border-radius:50%;
+  background:var(--accent);
+  color:var(--accent-text);
+  font-weight:800;
+}
+.help-dialog{
+  width:min(560px,calc(100vw - 32px));
+  max-height:min(82vh,720px);
+  margin:auto;
+  padding:0;
+  overflow:auto;
+  border:1px solid var(--border);
+  border-radius:20px;
+  background:var(--surface);
+  color:var(--text);
+  box-shadow:var(--shadow);
+}
+.help-dialog::backdrop{background:var(--modal-backdrop);backdrop-filter:blur(3px)}
+.help-box{padding:24px}
+.help-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px}
+.help-heading h2{font-size:22px;letter-spacing:-.02em}
+.help-intro{color:var(--muted);line-height:1.55;margin-bottom:18px}
+.help-close{
+  width:38px;height:38px;flex:none;
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:var(--surface-soft);
+  cursor:pointer;
+  font-size:20px;
+}
+.help-section{margin-top:16px}
+.help-section h3{margin-bottom:8px;font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.help-list{display:grid;gap:8px;list-style:none}
+.help-list li{display:grid;grid-template-columns:minmax(100px,145px) 1fr;gap:12px;padding:10px 12px;border-radius:12px;background:var(--surface-soft);line-height:1.45}
+.help-list strong{font-size:14px}
+.help-list span{font-size:14px;color:var(--muted)}
+.help-tip{padding:12px 14px;border-left:3px solid var(--accent);border-radius:0 10px 10px 0;background:var(--surface-soft);line-height:1.5}
 
 /* 顶部通栏 */
 .top-bar{
@@ -61,24 +199,34 @@ body{padding:24px;display:flex;flex-direction:column;align-items:center;backgrou
   gap:16px;
   flex-wrap:wrap;
   width:100%;
-  max-width:860px;
+  max-width:1040px;
+  padding:16px;
+  border:1px solid var(--border);
+  border-radius:18px;
+  background:var(--surface);
+  box-shadow:var(--shadow-small);
 }
+.game-controls{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;width:100%}
 .diff-bar{
   display:flex;
   align-items:center;
   gap:10px;
   font-size:17px;
-  color:#718096;
+  color:var(--muted);
   flex-wrap:wrap;
 }
 .diff-item{
   cursor:pointer;
+  padding:4px 2px;
+  user-select:none;
 }
+.diff-item:focus-visible{border-radius:2px}
 .diff-item.active{
-  color:#2554cc;
+  color:var(--accent);
   font-weight:bold;
   position:relative;
 }
+.diff-item:hover{color:var(--accent)}
 .diff-item.active::after{
   content:"";
   position:absolute;
@@ -86,13 +234,39 @@ body{padding:24px;display:flex;flex-direction:column;align-items:center;backgrou
   left:0;
   width:100%;
   height:3px;
-  background-color:#2554cc;
+  background-color:var(--accent);
+}
+.settings-bar{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}
+.setting-control{display:flex;align-items:center;gap:6px}
+.setting-control select{
+  padding:5px 8px;
+  border:1px solid var(--border);
+  border-radius:6px;
+  background:var(--surface);
+}
+.theme-switch{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:5px 9px;
+  border:1px solid var(--border);
+  border-radius:6px;
+  background:var(--surface);
+  cursor:pointer;
 }
 .status-bar{
   display:flex;
-  gap:16px;
-  font-size:17px;
+  gap:8px;
+  font-size:14px;
   align-items:center;
+  flex-wrap:wrap;
+  justify-content:center;
+}
+.status-bar>div{
+  padding:7px 10px;
+  border-radius:999px;
+  background:var(--surface-soft);
+  font-weight:600;
 }
 .mode-bar{
   display:flex;
@@ -100,75 +274,163 @@ body{padding:24px;display:flex;flex-direction:column;align-items:center;backgrou
   align-items:center;
 }
 .mode-btn{
-  border:1px solid #cbd5e1;
-  padding:4px 10px;
-  border-radius:6px;
+  border:1px solid var(--border);
+  padding:7px 12px;
+  border-radius:9px;
   cursor:pointer;
-  background:#fff;
+  background:var(--surface);
 }
 .mode-btn.active{
-  background:#2554cc;
-  color:white;
-  border-color:#2554cc;
+  background:var(--accent);
+  color:var(--accent-text);
+  border-color:var(--accent);
 }
 .timer-ctrl-bar{
   display:flex;
   gap:6px;
 }
 .timer-ctrl-bar button{
-  padding:3px 8px;
-  border-radius:4px;
-  border:1px solid #cbd5e1;
+  padding:6px 9px;
+  border-radius:8px;
+  border:1px solid var(--border);
   cursor:pointer;
+  background:var(--surface);
 }
 
 /* 主体左右布局：棋盘 | 控制面板+历史 */
 .main-wrap{
   display:flex;
-  gap:28px;
+  gap:22px;
   align-items:flex-start;
+  max-width:1040px;
 }
+.content-layout{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 300px;
+  align-items:start;
+  gap:20px;
+  width:100%;
+  max-width:1040px;
+}
+.game-area{min-width:0}
+.start-screen{
+  min-height:420px;
+  display:grid;
+  place-items:center;
+  padding:32px;
+  border:1px solid var(--border);
+  border-radius:20px;
+  background:var(--surface);
+  box-shadow:var(--shadow-small);
+  text-align:center;
+}
+.start-card{max-width:420px}
+.start-icon{
+  width:76px;height:76px;
+  display:grid;place-items:center;
+  margin:0 auto 18px;
+  border-radius:24px;
+  background:var(--selected);
+  color:var(--accent);
+  font-size:38px;
+  font-weight:800;
+}
+.start-card h2{font-size:25px;letter-spacing:-.03em}
+.start-card p{margin:10px 0 22px;color:var(--muted);line-height:1.6}
+.primary-action,.secondary-action,.export-button,.exit-button{
+  border:0;
+  border-radius:12px;
+  padding:11px 16px;
+  font-weight:700;
+  cursor:pointer;
+}
+.primary-action{background:var(--accent);color:var(--accent-text);box-shadow:var(--shadow-small)}
+.primary-action:hover{filter:brightness(1.06);transform:translateY(-1px)}
+.secondary-action{margin-left:8px;border:1px solid var(--border);background:var(--surface-soft)}
+.exit-button{padding:7px 11px;border:1px solid var(--border);background:var(--surface);font-size:13px}
+.exit-button:hover{border-color:var(--accent);color:var(--accent)}
+.game-area .main-wrap{max-width:none}
+.records-panel{
+  align-self:start;
+  padding:18px;
+  border:1px solid var(--border);
+  border-radius:18px;
+  background:var(--surface);
+  box-shadow:var(--shadow-small);
+}
+.records-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:14px}
+.records-heading h2{font-size:18px;letter-spacing:-.02em}
+.records-heading p{margin-top:3px;color:var(--muted);font-size:12px}
+.record-summary{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.record-stat{padding:10px;border-radius:12px;background:var(--surface-soft)}
+.record-stat span{display:block;color:var(--muted);font-size:11px}
+.record-stat strong{display:block;margin-top:4px;font-size:16px}
+.record-best{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center}
+.record-list{display:grid;gap:8px;max-height:390px;overflow:auto;padding-right:3px}
+.record-entry{padding:10px;border:1px solid var(--border);border-radius:12px;background:var(--surface)}
+.record-entry-top,.record-entry-bottom{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.record-entry-top strong{font-size:13px}
+.record-entry-top span,.record-entry-bottom{font-size:11px;color:var(--muted)}
+.record-entry-bottom{margin-top:6px}
+.record-score{color:var(--accent);font-weight:800}
+.records-empty{padding:14px 10px;border-radius:12px;background:var(--surface-soft);color:var(--muted);font-size:13px;line-height:1.5;text-align:center}
+.export-button{width:100%;margin-top:12px;border:1px solid var(--border);background:var(--surface-soft);color:var(--text)}
+.export-button:hover{border-color:var(--accent);color:var(--accent)}
+.records-notice{min-height:18px;margin-top:8px;color:var(--muted);font-size:12px;text-align:center}
 
 /* 棋盘 */
 .board{
-  display:grid;
-  grid-template-columns:repeat(9,1fr);
-  grid-template-rows:repeat(9,1fr);
-  width:480px;
+  display:flex;
+  flex-direction:column;
+  width:min(68vh,560px,438px,calc(100vw - 642px));
+  min-width:390px;
   aspect-ratio:1/1;
-  border:3px solid #222;
+  border:3px solid var(--box-line);
+  border-radius:12px;
+  overflow:hidden;
+  box-shadow:var(--shadow);
+  background:var(--surface);
+}
+.board-row{
+  display:grid;
+  grid-template-columns:repeat(9,minmax(0,1fr));
+  flex:1;
+  min-height:0;
 }
 .cell{
-  border:1px solid #cccccc;
+  border:0;
+  box-shadow:inset -1px -1px 0 var(--cell-border);
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:clamp(22px,5vw,32px);
+  font-size:clamp(21px,4.3vw,32px);
   cursor:pointer;
   position:relative;
-  background:#ffffff;
+  background:var(--surface);
+  color:var(--text);
   min-height:0;
   min-width:0;
 }
-.cell:nth-child(3n):not(:nth-child(9n)){border-right:3px solid #222;}
-.cell:nth-child(n+19):nth-child(-n+27),
-.cell:nth-child(n+46):nth-child(-n+54){border-bottom:3px solid #222;}
+.cell:nth-child(3n):not(:last-child){box-shadow:inset -3px 0 0 var(--box-line),inset 0 -1px 0 var(--cell-border);}
+.board-row:nth-child(3n):not(:last-child) .cell{box-shadow:inset 0 -3px 0 var(--box-line),inset -1px 0 0 var(--cell-border);}
+.board-row:nth-child(3n):not(:last-child) .cell:nth-child(3n):not(:last-child){box-shadow:inset -3px 0 0 var(--box-line),inset 0 -3px 0 var(--box-line);}
 
-.cell.selected{background:#b8d4ff;}
-.cell.highlight-row{background:#e6f0ff;}
-.cell.highlight-col{background:#e6f0ff;}
-.cell.highlight-box{background:#e6f0ff;}
-.cell.error{background:#ffd6d6 !important;color:#c00;}
+.cell.highlight-row{background:var(--highlight);}
+.cell.highlight-col{background:var(--highlight);}
+.cell.highlight-box{background:var(--highlight);}
+.cell.highlight-same-number{background:color-mix(in srgb,var(--accent) 18%,var(--surface));}
+.cell.selected{background:var(--selected);z-index:1;box-shadow:inset 0 0 0 2px var(--accent);}
+.cell.error{background:var(--error-bg) !important;color:var(--error-text);}
 
-.cell.given{color:#111;font-weight:bold;}
-.cell.user-input{color:#2563eb;}
+.cell.given{color:var(--given);font-weight:bold;}
+.cell.user-input{color:var(--user-input);}
 
 .note-text{
   position:absolute;
   top:4px;
   left:4px;
   font-size:11px;
-  color:#777;
+  color:var(--note);
   pointer-events:none;
 }
 
@@ -176,8 +438,8 @@ body{padding:24px;display:flex;flex-direction:column;align-items:center;backgrou
 .panel-right{
   display:flex;
   flex-direction:column;
-  gap:14px;
-  width:240px;
+  gap:12px;
+  width:260px;
 }
 .tool-bar{
   display:grid;
@@ -186,134 +448,446 @@ body{padding:24px;display:flex;flex-direction:column;align-items:center;backgrou
 }
 .tool-bar button{
   padding:12px 6px;
-  border-radius:8px;
-  border:none;
+  border-radius:12px;
+  border:1px solid transparent;
   font-size:15px;
   cursor:pointer;
-  background:#e4e7ec;
+  background:var(--control);
 }
 .tool-bar button.active{
-  background:#b8d4ff;
+  background:var(--selected);
+  border-color:var(--accent);
 }
+.tool-bar button:hover,.num-panel button:hover{box-shadow:var(--shadow-small);transform:translateY(-1px)}
+.tool-bar button:nth-child(1){background:color-mix(in srgb,#8b5cf6 13%,var(--surface));}
+.tool-bar button:nth-child(2){background:color-mix(in srgb,#f59e0b 15%,var(--surface));}
+.tool-bar button:nth-child(3){background:color-mix(in srgb,#3b82f6 13%,var(--surface));}
+.tool-bar button:nth-child(4){background:color-mix(in srgb,#10b981 13%,var(--surface));}
+.tool-bar button:nth-child(5){background:color-mix(in srgb,#ec4899 13%,var(--surface));}
+.tool-bar button.active,.tool-bar button.active:hover{background:var(--selected)}
 
 .num-panel{
   display:grid;
   grid-template-columns:repeat(3,1fr);
-  gap:10px;
+  gap:7px;
 }
 .num-panel button{
-  padding:14px 0;
-  font-size:24px;
-  border:none;
-  border-radius:8px;
-  background:#e4e7ec;
+  aspect-ratio:1/1;
+  padding:8px 0;
+  font-size:22px;
+  font-weight:700;
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:var(--surface);
+  box-shadow:0 2px 4px rgba(15,23,42,.05);
   cursor:pointer;
 }
-.num-panel button:hover{background:#d0d5dd;}
-
-/* History专区 */
-.history-box{
-  background:#ffffff;
-  border:1px solid #e2e8f0;
-  border-radius:10px;
-  padding:14px;
-}
-.history-box h4{
-  margin-bottom:10px;
-  font-size:16px;
-}
-.history-item{
-  font-size:14px;
-  line-height:1.7;
-}
+.num-panel button:hover{background:var(--control-hover)}
+.num-panel button:last-child{font-size:19px;color:var(--muted)}
 
 .msg{
   font-size:16px;
-  min-height:24px;
+  min-height:42px;
+  padding:10px 14px;
+  border-radius:12px;
+  color:var(--muted);
+  text-align:center;
+}
+.msg:not(:empty){background:var(--surface);box-shadow:var(--shadow-small);color:var(--text)}
+.board,.cell{touch-action:manipulation}
+@media(max-width:1050px){
+  .content-layout{grid-template-columns:minmax(0,1fr);max-width:820px}
+  .records-panel{width:100%}
+  .main-wrap{gap:16px}
+  .board{width:min(min(62vh,500px),calc(100vw - 320px));min-width:340px}
+  .panel-right{width:240px}
 }
 
 @media(max-width:820px){
-  .main-wrap{flex-direction:column;align-items:center;}
-  .board{width:85vmin;max-width:420px;}
-  .panel-right{width:85vmin;max-width:420px;}
+  body{padding:20px 14px 28px}
+  .top-bar{gap:14px;padding:14px}
+  .main-wrap{width:100%;flex-direction:column;align-items:center;}
+  .content-layout{grid-template-columns:1fr;max-width:480px}
+  .records-panel{width:100%;order:2}
+  .board{width:min(88vw,64vh,480px);min-width:0;max-width:480px;}
+  .panel-right{width:min(88vw,480px);max-width:480px;}
   .num-panel{grid-template-columns:repeat(5,1fr);}
+  .status-bar{order:3}
+  .settings-bar{order:4}
+}
+@media(max-width:520px){
+  body{gap:12px;padding:16px 10px 24px}
+  .brand-copy h1{font-size:22px}
+  .brand-copy p{font-size:12px}
+  .brand-mark{padding:8px;gap:2px}
+  .help-trigger{padding:7px 10px}
+  .help-trigger .help-label{display:none}
+  .diff-bar{justify-content:center;gap:8px;font-size:14px}
+  .mode-bar{flex-wrap:wrap;justify-content:center}
+  .content-layout{max-width:100%}
+  .start-screen{min-height:340px;padding:24px 16px}
+  .start-card h2{font-size:22px}
+  .secondary-action{margin:8px 0 0}
+  .status-bar{font-size:12px;gap:5px}
+  .status-bar>div{padding:6px 8px}
+  .tool-bar{gap:7px}
+  .tool-bar button{font-size:14px;padding:10px 4px}
+  .help-box{padding:19px}
+  .help-list li{grid-template-columns:1fr;gap:2px}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{scroll-behavior:auto !important;transition:none !important;animation:none !important}
 }
 </style>
 </head>
 <body>
 
 <!-- 恢复对局弹窗 -->
-<div class="resume-modal hidden" id="resumeModal">
+<div class="resume-modal hidden" id="resumeModal" role="dialog" aria-modal="true" aria-labelledby="resumePrompt">
   <div class="resume-box">
-    <p>Your last game is not finished.Choose to restart or continue.</p>
+    <p id="resumePrompt" data-i18n="resumePrompt">Your last game is not finished. Choose to restart or continue.</p>
     <div class="resume-buttons">
-      <button class="btn-continue" id="continueBtn">Continue</button>
-      <button class="btn-restart" id="restartBtn">Restart</button>
+      <button class="btn-continue" id="continueBtn" data-i18n="continue">Continue</button>
+      <button class="btn-restart" id="restartBtn" data-i18n="restart">Restart</button>
     </div>
   </div>
 </div>
+
+<header class="brand-bar">
+  <div class="brand-lockup">
+    <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+    <div class="brand-copy">
+      <h1>Sudoku</h1>
+      <p data-i18n="tagline">A little focus, one square at a time.</p>
+    </div>
+  </div>
+  <button class="help-trigger" id="helpButton" type="button" aria-haspopup="dialog" aria-controls="helpDialog" data-i18n-aria="help">
+    <span class="help-mark" aria-hidden="true">?</span>
+    <span class="help-label" data-i18n="help">How to play</span>
+  </button>
+</header>
+
+<dialog class="help-dialog" id="helpDialog" aria-labelledby="helpTitle" aria-describedby="helpIntro">
+  <div class="help-box">
+    <div class="help-heading">
+      <h2 id="helpTitle" data-i18n="helpTitle">Quick guide</h2>
+      <button class="help-close" id="helpClose" type="button" data-i18n-aria="closeHelp" autofocus>×</button>
+    </div>
+    <p class="help-intro" id="helpIntro" data-i18n="helpIntro">Fill the grid so every row, column, and 3×3 box contains the numbers 1–9 exactly once.</p>
+    <section class="help-section" aria-labelledby="helpBasicsTitle">
+      <h3 id="helpBasicsTitle" data-i18n="helpBasics">Getting started</h3>
+      <ul class="help-list">
+        <li><strong data-i18n="helpDifficulty">Choose a challenge</strong><span data-i18n="helpDifficultyText">Pick a difficulty at the top to start a fresh puzzle.</span></li>
+        <li><strong data-i18n="helpSelect">Select a square</strong><span data-i18n="helpSelectText">Tap a square to highlight its row, column, and box.</span></li>
+        <li><strong data-i18n="helpNumbers">Enter a number</strong><span data-i18n="helpNumbersText">Choose a number button to fill the selected square.</span></li>
+      </ul>
+    </section>
+    <section class="help-section" aria-labelledby="helpToolsTitle">
+      <h3 id="helpToolsTitle" data-i18n="helpTools">Button guide</h3>
+      <ul class="help-list">
+        <li><strong data-i18n="helpPencil">Pencil</strong><span data-i18n="helpPencilText">Toggle note mode to jot down possible numbers.</span></li>
+        <li><strong data-i18n="helpHint">Hint</strong><span data-i18n="helpHintText">Fill the selected empty square with its answer (limited uses).</span></li>
+        <li><strong data-i18n="helpUndo">Undo</strong><span data-i18n="helpUndoText">Undo your most recent number entry.</span></li>
+        <li><strong data-i18n="helpCheck">Check</strong><span data-i18n="helpCheckText">Highlight squares that break Sudoku rules.</span></li>
+        <li><strong data-i18n="helpSubmit">Submit</strong><span data-i18n="helpSubmitText">Check your completed grid.</span></li>
+        <li><strong data-i18n="helpClear">Clear (×)</strong><span data-i18n="helpClearText">Remove your entry from the selected square.</span></li>
+        <li><strong data-i18n="helpTime">Time mode</strong><span data-i18n="helpTimeText">Start and pause the timer whenever you like.</span></li>
+      </ul>
+    </section>
+    <p class="help-tip" data-i18n="helpTip">Your game saves automatically. Change language or theme any time in the settings.</p>
+  </div>
+</dialog>
 
 <div class="top-bar">
-  <div class="diff-bar">
-    <span>Difficulty:</span>
-    <span class="diff-item active" data-diff="easy">Easy</span>
-    <span class="diff-item" data-diff="medium">Medium</span>
-    <span class="diff-item" data-diff="hard">Hard</span>
-    <span class="diff-item" data-diff="expert">Expert</span>
-    <span class="diff-item" data-diff="master">Master</span>
-    <span class="diff-item" data-diff="extreme">Extreme</span>
-  </div>
-  <div class="mode-bar">
-    <button class="mode-btn active" id="practiceModeBtn">Practice Mode</button>
-    <button class="mode-btn" id="timeModeBtn">Time Mode</button>
-    <div class="timer-ctrl-bar">
-      <button id="timerStartBtn" disabled>▶ Start</button>
-      <button id="timerPauseBtn" disabled>⏸ Pause</button>
+  <div class="game-controls hidden" id="gameControls">
+    <div class="diff-bar">
+      <span data-i18n="difficulty">Difficulty:</span>
+      <span class="diff-item active" data-diff="easy" tabindex="0" data-i18n="easy">Easy</span>
+      <span class="diff-item" data-diff="medium" tabindex="0" data-i18n="medium">Medium</span>
+      <span class="diff-item" data-diff="hard" tabindex="0" data-i18n="hard">Hard</span>
+      <span class="diff-item" data-diff="expert" tabindex="0" data-i18n="expert">Expert</span>
+      <span class="diff-item" data-diff="master" tabindex="0" data-i18n="master">Master</span>
+      <span class="diff-item" data-diff="extreme" tabindex="0" data-i18n="extreme">Extreme</span>
+    </div>
+    <div class="mode-bar">
+      <button class="mode-btn active" id="practiceModeBtn" data-i18n="practiceMode">Practice Mode</button>
+      <button class="mode-btn" id="timeModeBtn" data-i18n="timeMode">Time Mode</button>
+      <div class="timer-ctrl-bar">
+        <button id="timerStartBtn" disabled data-i18n="start">▶ Start</button>
+        <button id="timerPauseBtn" disabled data-i18n="pause">⏸ Pause</button>
+      </div>
+    </div>
+    <div class="status-bar">
+      <div id="mistakeText"></div>
+      <div id="hintText"></div>
+      <div id="timerText"></div>
+      <button class="exit-button" id="exitGameBtn" data-i18n="exitGame">Exit game</button>
     </div>
   </div>
-  <div class="status-bar">
-    <div id="mistakeText">Mistake: 0 /5</div>
-    <div id="hintText">Hint left: 3</div>
-    <div id="timerText">Time: --:--</div>
+  <div class="settings-bar">
+    <div class="setting-control">
+      <label for="languageSelect" data-i18n="language">Language</label>
+      <select id="languageSelect">
+        <option value="en">English</option>
+        <option value="zh-CN">简体中文</option>
+        <option value="ja">日本語</option>
+        <option value="ko">한국어</option>
+      </select>
+    </div>
+    <div class="setting-control">
+      <span data-i18n="theme">Theme</span>
+      <button class="theme-switch" id="themeSwitch" type="button" role="switch" aria-checked="false">
+        <span id="themeSwitchText">Light</span>
+      </button>
+    </div>
   </div>
 </div>
 
-<div class="main-wrap">
-  <div>
-    <div class="board" id="board"></div>
-    <div class="msg" id="msg" style="margin-top:10px;text-align:center;"></div>
-  </div>
-
-  <div class="panel-right">
-    <div class="tool-bar">
-      <button id="pencilBtn">✏️ Pencil OFF</button>
-      <button id="hintBtn">💡 Hint</button>
-      <button id="undoBtn">↩ Undo</button>
-      <button id="checkBtn">✅ Check</button>
-      <button id="submitBtn">🚀 Submit</button>
-    </div>
-    <div class="num-panel">
-      <button data-num="1">1</button>
-      <button data-num="2">2</button>
-      <button data-num="3">3</button>
-      <button data-num="4">4</button>
-      <button data-num="5">5</button>
-      <button data-num="6">6</button>
-      <button data-num="7">7</button>
-      <button data-num="8">8</button>
-      <button data-num="9">9</button>
-      <button data-num="0">⨯</button>
-    </div>
-    <div class="history-box">
-      <h4>📜 History</h4>
-      <div class="history-item">FASTEST: <span id="fastestVal">--:--</span></div>
-      <div class="history-item">Total playing times: <span id="totalPlayVal">0</span></div>
-      <div class="history-item">STAR records: <span id="starRecordVal">0</span></div>
-    </div>
+  <div class="content-layout">
+    <main class="game-area">
+      <section class="start-screen" id="startScreen">
+        <div class="start-card">
+          <div class="start-icon" aria-hidden="true">9</div>
+          <h2 data-i18n="welcomeTitle">Ready for a little brain break?</h2>
+          <p data-i18n="welcomeText">Choose a difficulty and mode after you start. Your records stay safely in this browser.</p>
+          <button class="primary-action" id="startGameBtn" data-i18n="startGame">Start a new game</button>
+          <button class="secondary-action hidden" id="resumeGameBtn" data-i18n="resumeGame">Continue saved game</button>
+        </div>
+      </section>
+      <div class="main-wrap hidden" id="activeGame">
+        <div>
+          <div class="board" id="board" role="grid" data-i18n-aria="boardLabel"></div>
+          <div class="msg" id="msg" role="status" aria-live="polite" style="margin-top:10px;"></div>
+        </div>
+        <div class="panel-right">
+          <div class="tool-bar">
+            <button id="pencilBtn"></button>
+            <button id="hintBtn" data-i18n="hint">💡 Hint</button>
+            <button id="undoBtn" data-i18n="undo">↩ Undo</button>
+            <button id="checkBtn" data-i18n="check">✅ Check</button>
+            <button id="submitBtn" data-i18n="submit">🚀 Submit</button>
+          </div>
+          <div class="num-panel">
+            <button data-num="1" data-i18n-aria="enterNumber">1</button>
+            <button data-num="2" data-i18n-aria="enterNumber">2</button>
+            <button data-num="3" data-i18n-aria="enterNumber">3</button>
+            <button data-num="4" data-i18n-aria="enterNumber">4</button>
+            <button data-num="5" data-i18n-aria="enterNumber">5</button>
+            <button data-num="6" data-i18n-aria="enterNumber">6</button>
+            <button data-num="7" data-i18n-aria="enterNumber">7</button>
+            <button data-num="8" data-i18n-aria="enterNumber">8</button>
+            <button data-num="9" data-i18n-aria="enterNumber">9</button>
+            <button data-num="0" data-i18n-aria="clearCell">⨯</button>
+          </div>
+        </div>
+      </div>
+    </main>
+    <aside class="records-panel" id="recordsPanel" aria-labelledby="recordsTitle">
+      <div class="records-heading">
+        <div>
+          <h2 id="recordsTitle" data-i18n="recordsTitle">Game records</h2>
+          <p data-i18n="recordsLocal">Saved only in this browser</p>
+        </div>
+      </div>
+      <div class="record-summary">
+        <div class="record-stat"><span data-i18n="completedGames">Completed</span><strong id="completedCount">0</strong></div>
+        <div class="record-stat"><span data-i18n="totalPlayTime">Total play time</span><strong id="totalDuration">00:00</strong></div>
+        <div class="record-stat record-best"><span data-i18n="bestRecord">Best record</span><strong id="bestRecord">--:--</strong></div>
+      </div>
+      <div class="record-list" id="recordList" aria-live="polite"></div>
+      <p class="records-notice" data-i18n="scoreFormula">Score = difficulty points − time penalty − mistake penalty − hint penalty.</p>
+      <button class="export-button" id="exportRecordsBtn" data-i18n="exportRecords">⇩ Export game records (PNG)</button>
+      <div class="records-notice" id="recordsNotice" role="status" aria-live="polite"></div>
+    </aside>
   </div>
 </div>
 
 <script>
+const translations = {
+  en: {
+    difficulty:"Difficulty:",easy:"Easy",medium:"Medium",hard:"Hard",expert:"Expert",master:"Master",extreme:"Extreme",
+    practiceMode:"Practice Mode",timeMode:"Time Mode",start:"▶ Start",pause:"⏸ Pause",mistake:"Mistakes: {count} / {max}",
+    hintLeft:"Hints left: {count}",time:"Time: {time}",language:"Language",theme:"Theme",light:"Light",dark:"Dark",
+    switchToDark:"Switch to dark theme",switchToLight:"Switch to light theme",pencilOn:"✏️ Pencil ON",pencilOff:"✏️ Pencil OFF",
+    hint:"💡 Hint",undo:"↩ Undo",check:"✅ Check",submit:"🚀 Submit",history:"📜 History",fastest:"FASTEST:",
+    totalPlays:"Total playing times:",starRecords:"STAR records:",resumePrompt:"Your last game is not finished. Choose to restart or continue.",
+    continue:"Continue",restart:"Restart",nothingToUndo:"Nothing to undo",undone:"Undone",selectCell:"Select a cell first",
+    noHints:"No hints left",cannotHintGiven:"Cannot hint a given cell",hintApplied:"Hint applied",givenCannotEdit:"Given cell cannot be edited",
+    gameOver:"Game over, too many mistakes",conflictsFound:"❌ Conflicts found, check red cells",noConflicts:"✅ No conflicts detected",
+    fillBeforeSubmit:"⚠️ Fill all cells before submitting",solved:"🎉 Congratulations! Puzzle solved",
+    hasConflicts:"❌ Conflicts found, click Check to find errors",newPuzzle:"New {difficulty} puzzle generated",newGame:"New game started",
+    enterNumber:"Enter {number}",clearCell:"Clear cell",tagline:"A little focus, one square at a time.",help:"How to play",
+    helpTitle:"Quick guide",helpIntro:"Fill the grid so every row, column, and 3×3 box contains the numbers 1–9 exactly once.",
+    helpBasics:"Getting started",helpDifficulty:"Choose a challenge",helpDifficultyText:"Pick a difficulty at the top to start a fresh puzzle.",
+    helpSelect:"Select a square",helpSelectText:"Tap a square to highlight its row, column, and box.",
+    helpNumbers:"Enter a number",helpNumbersText:"Choose a number button to fill the selected square.",helpTools:"Button guide",
+    helpPencil:"Pencil",helpPencilText:"Toggle note mode to jot down possible numbers.",
+    helpHint:"Hint",helpHintText:"Fill the selected empty square with its answer (limited uses).",
+    helpUndo:"Undo",helpUndoText:"Undo your most recent number entry.",
+    helpCheck:"Check",helpCheckText:"Highlight squares that break Sudoku rules.",
+    helpSubmit:"Submit",helpSubmitText:"Check your completed grid.",
+    helpClear:"Clear (×)",helpClearText:"Remove your entry from the selected square.",
+    helpTime:"Time mode",helpTimeText:"Start and pause the timer whenever you like.",
+    helpTip:"Your game saves automatically. Change language or theme any time in the settings.",
+    closeHelp:"Close help",boardLabel:"Sudoku puzzle grid",emptyCell:"empty",valueLabel:"{value}",cellLabel:"Row {row}, column {col}, {value}",
+    welcomeTitle:"Ready for a little brain break?",welcomeText:"Choose a difficulty and mode after you start. Your records stay safely in this browser.",
+    startGame:"Start a new game",resumeGame:"Continue saved game",exitGame:"Exit game",recordsTitle:"Game records",
+    recordsLocal:"Saved only in this browser",completedGames:"Completed",totalPlayTime:"Total play time",bestRecord:"Best record",
+    exportRecords:"⇩ Export game records (PNG)",emptyRecords:"Your completed games will appear here.",scoreLabel:"Score",
+    recordTime:"Time",recordMode:"Mode",recordDifficulty:"Difficulty",recordMistakes:"Mistakes",practiceShort:"Practice",timeShort:"Timed",
+    exportDone:"PNG record image downloaded.",exportFailed:"Could not create the PNG image. Please try again.",
+    scoreFormula:"Score = difficulty points − time penalty − mistake penalty − hint penalty."
+  },
+  "zh-CN": {
+    difficulty:"难度：",easy:"简单",medium:"中等",hard:"困难",expert:"专家",master:"大师",extreme:"极限",
+    practiceMode:"练习模式",timeMode:"计时模式",start:"▶ 开始",pause:"⏸ 暂停",mistake:"错误次数：{count} / {max}",
+    hintLeft:"剩余提示：{count}",time:"时间：{time}",language:"语言",theme:"主题",light:"浅色",dark:"深色",
+    switchToDark:"切换到深色主题",switchToLight:"切换到浅色主题",pencilOn:"✏️ 笔记已开启",pencilOff:"✏️ 笔记已关闭",
+    hint:"💡 提示",undo:"↩ 撤销",check:"✅ 检查",submit:"🚀 提交",history:"📜 记录",fastest:"最快用时：",
+    totalPlays:"游戏总次数：",starRecords:"星级记录：",resumePrompt:"上次的游戏尚未完成。请选择继续游戏或重新开始。",
+    continue:"继续",restart:"重新开始",nothingToUndo:"没有可撤销的操作",undone:"已撤销",selectCell:"请先选择一个格子",
+    noHints:"没有剩余提示",cannotHintGiven:"无法提示已给出的格子",hintApplied:"提示已应用",givenCannotEdit:"已给出的格子无法修改",
+    gameOver:"错误次数过多，游戏结束",conflictsFound:"❌ 发现冲突，请检查红色格子",noConflicts:"✅ 未发现冲突",
+    fillBeforeSubmit:"⚠️ 请填写所有格子后再提交",solved:"🎉 恭喜！数独已完成",
+    hasConflicts:"❌ 存在冲突，点击“检查”查看错误",newPuzzle:"已生成新的{difficulty}数独",newGame:"新游戏已开始",
+    enterNumber:"输入数字 {number}",clearCell:"清除格子",tagline:"静下心来，一格一格完成。",help:"玩法说明",
+    helpTitle:"快速指南",helpIntro:"填写棋盘，使每一行、每一列和每个 3×3 宫都恰好包含数字 1–9。",
+    helpBasics:"开始游戏",helpDifficulty:"选择难度",helpDifficultyText:"点击顶部难度即可开始一道新题。",
+    helpSelect:"选择格子",helpSelectText:"点击格子可高亮对应的行、列和宫。",
+    helpNumbers:"输入数字",helpNumbersText:"点击数字按钮，将数字填入选中的格子。",helpTools:"按钮说明",
+    helpPencil:"笔记",helpPencilText:"开启笔记模式，记录可能的数字。",
+    helpHint:"提示",helpHintText:"在选中的空格中填入正确答案（次数有限）。",
+    helpUndo:"撤销",helpUndoText:"撤销最近一次数字填写。",
+    helpCheck:"检查",helpCheckText:"高亮违反数独规则的格子。",
+    helpSubmit:"提交",helpSubmitText:"检查已完成的棋盘。",
+    helpClear:"清除 (×)",helpClearText:"清除选中格子中填写的数字。",
+    helpTime:"计时模式",helpTimeText:"可随时开始或暂停计时器。",
+    helpTip:"游戏会自动保存。可随时在设置中更改语言或主题。",
+    closeHelp:"关闭说明",boardLabel:"数独棋盘",emptyCell:"空格",valueLabel:"{value}",cellLabel:"第 {row} 行，第 {col} 列，{value}",
+    welcomeTitle:"准备好来一场脑力休息了吗？",welcomeText:"开始后可选择难度和模式。游戏记录仅保存在此浏览器中。",
+    startGame:"开始新游戏",resumeGame:"继续已保存的游戏",exitGame:"退出游戏",recordsTitle:"游戏记录",
+    recordsLocal:"仅保存在此浏览器",completedGames:"已完成",totalPlayTime:"累计用时",bestRecord:"最佳记录",
+    exportRecords:"⇩ 导出游戏记录 (PNG)",emptyRecords:"完成游戏后，记录会显示在这里。",scoreLabel:"得分",
+    recordTime:"用时",recordMode:"模式",recordDifficulty:"难度",recordMistakes:"错误",practiceShort:"练习",timeShort:"计时",
+    exportDone:"PNG 记录图片已下载。",exportFailed:"无法生成 PNG 图片，请重试。",
+    scoreFormula:"得分 = 难度基础分 − 用时扣分 − 错误扣分 − 提示扣分。"
+  },
+  ja: {
+    difficulty:"難易度：",easy:"初級",medium:"中級",hard:"上級",expert:"エキスパート",master:"マスター",extreme:"超上級",
+    practiceMode:"練習モード",timeMode:"タイムモード",start:"▶ 開始",pause:"⏸ 一時停止",mistake:"ミス：{count} / {max}",
+    hintLeft:"ヒント残り：{count}",time:"時間：{time}",language:"言語",theme:"テーマ",light:"ライト",dark:"ダーク",
+    switchToDark:"ダークテーマに切り替え",switchToLight:"ライトテーマに切り替え",pencilOn:"✏️ メモ ON",pencilOff:"✏️ メモ OFF",
+    hint:"💡 ヒント",undo:"↩ 元に戻す",check:"✅ チェック",submit:"🚀 回答",history:"📜 記録",fastest:"最速タイム：",
+    totalPlays:"プレイ回数：",starRecords:"星の記録：",resumePrompt:"前回のゲームがまだ終わっていません。続けるか、最初からやり直してください。",
+    continue:"続ける",restart:"やり直す",nothingToUndo:"元に戻せる操作はありません",undone:"元に戻しました",selectCell:"先にマスを選択してください",
+    noHints:"ヒントが残っていません",cannotHintGiven:"最初から埋まっているマスにはヒントを使えません",hintApplied:"ヒントを適用しました",givenCannotEdit:"最初から埋まっているマスは編集できません",
+    gameOver:"ミスが多すぎます。ゲームオーバーです",conflictsFound:"❌ 矛盾があります。赤いマスを確認してください",noConflicts:"✅ 矛盾はありません",
+    fillBeforeSubmit:"⚠️ 回答を送信する前にすべてのマスを埋めてください",solved:"🎉 おめでとうございます！正解です",
+    hasConflicts:"❌ 矛盾があります。「チェック」を押して確認してください",newPuzzle:"新しい{difficulty}の問題を作成しました",newGame:"新しいゲームを開始しました",
+    enterNumber:"数字 {number} を入力",clearCell:"マスを消去",tagline:"一マスずつ、集中して解いてみよう。",help:"遊び方",
+    helpTitle:"クイックガイド",helpIntro:"各行・各列・3×3のブロックに1〜9の数字を一度ずつ入れましょう。",
+    helpBasics:"ゲームの始め方",helpDifficulty:"難易度を選ぶ",helpDifficultyText:"上部の難易度を選ぶと新しい問題が始まります。",
+    helpSelect:"マスを選ぶ",helpSelectText:"マスを選ぶと、同じ行・列・ブロックがハイライトされます。",
+    helpNumbers:"数字を入力",helpNumbersText:"数字ボタンを押して、選択したマスに入力します。",helpTools:"ボタンの説明",
+    helpPencil:"メモ",helpPencilText:"メモモードで候補の数字を書き留めます。",
+    helpHint:"ヒント",helpHintText:"選択した空マスに正解を入力します（回数制限あり）。",
+    helpUndo:"元に戻す",helpUndoText:"直前に入力した数字を取り消します。",
+    helpCheck:"チェック",helpCheckText:"ルールに反するマスをハイライトします。",
+    helpSubmit:"回答",helpSubmitText:"完成した盤面をチェックします。",
+    helpClear:"消去 (×)",helpClearText:"選択したマスの入力を消します。",
+    helpTime:"タイムモード",helpTimeText:"タイマーはいつでも開始・一時停止できます。",
+    helpTip:"ゲームは自動保存されます。言語やテーマは設定からいつでも変更できます。",
+    closeHelp:"ヘルプを閉じる",boardLabel:"数独の盤面",emptyCell:"空欄",valueLabel:"{value}",cellLabel:"{row}行 {col}列、{value}",
+    welcomeTitle:"ちょっと頭をリフレッシュしませんか？",welcomeText:"開始後に難易度とモードを選べます。記録はこのブラウザー内だけに保存されます。",
+    startGame:"新しいゲームを始める",resumeGame:"保存したゲームを続ける",exitGame:"ゲームを終了",recordsTitle:"ゲーム記録",
+    recordsLocal:"このブラウザー内だけに保存",completedGames:"クリア数",totalPlayTime:"合計プレイ時間",bestRecord:"ベスト記録",
+    exportRecords:"⇩ ゲーム記録をエクスポート (PNG)",emptyRecords:"クリアしたゲームの記録がここに表示されます。",scoreLabel:"スコア",
+    recordTime:"時間",recordMode:"モード",recordDifficulty:"難易度",recordMistakes:"ミス",practiceShort:"練習",timeShort:"タイム",
+    exportDone:"PNGの記録画像をダウンロードしました。",exportFailed:"PNG画像を作成できませんでした。もう一度お試しください。",
+    scoreFormula:"スコア = 難易度ポイント − 時間ペナルティ − ミスペナルティ − ヒントペナルティ。"
+  },
+  ko: {
+    difficulty:"난이도:",easy:"쉬움",medium:"보통",hard:"어려움",expert:"전문가",master:"마스터",extreme:"최고",
+    practiceMode:"연습 모드",timeMode:"시간 모드",start:"▶ 시작",pause:"⏸ 일시정지",mistake:"실수: {count} / {max}",
+    hintLeft:"남은 힌트: {count}",time:"시간: {time}",language:"언어",theme:"테마",light:"라이트",dark:"다크",
+    switchToDark:"다크 테마로 전환",switchToLight:"라이트 테마로 전환",pencilOn:"✏️ 메모 켜짐",pencilOff:"✏️ 메모 꺼짐",
+    hint:"💡 힌트",undo:"↩ 실행 취소",check:"✅ 확인",submit:"🚀 제출",history:"📜 기록",fastest:"최고 기록:",
+    totalPlays:"총 플레이 횟수:",starRecords:"별 기록:",resumePrompt:"지난 게임이 아직 끝나지 않았습니다. 계속하거나 다시 시작하세요.",
+    continue:"계속",restart:"다시 시작",nothingToUndo:"실행 취소할 작업이 없습니다",undone:"실행 취소했습니다",selectCell:"먼저 칸을 선택하세요",
+    noHints:"남은 힌트가 없습니다",cannotHintGiven:"처음부터 주어진 칸에는 힌트를 사용할 수 없습니다",hintApplied:"힌트를 적용했습니다",givenCannotEdit:"처음부터 주어진 칸은 수정할 수 없습니다",
+    gameOver:"실수가 너무 많아 게임이 종료되었습니다",conflictsFound:"❌ 충돌이 있습니다. 빨간 칸을 확인하세요",noConflicts:"✅ 충돌이 없습니다",
+    fillBeforeSubmit:"⚠️ 제출하기 전에 모든 칸을 채우세요",solved:"🎉 축하합니다! 퍼즐을 풀었습니다",
+    hasConflicts:"❌ 충돌이 있습니다. 확인을 눌러 오류를 찾으세요",newPuzzle:"새 {difficulty} 퍼즐을 만들었습니다",newGame:"새 게임을 시작했습니다",
+    enterNumber:"숫자 {number} 입력",clearCell:"칸 지우기",tagline:"한 칸씩 차분히 풀어 보세요.",help:"게임 방법",
+    helpTitle:"빠른 안내",helpIntro:"각 행, 열, 3×3 칸에 숫자 1–9가 한 번씩만 들어가도록 채우세요.",
+    helpBasics:"시작하기",helpDifficulty:"난이도 선택",helpDifficultyText:"상단에서 난이도를 선택하면 새 퍼즐이 시작됩니다.",
+    helpSelect:"칸 선택",helpSelectText:"칸을 선택하면 해당 행, 열, 3×3 칸이 강조됩니다.",
+    helpNumbers:"숫자 입력",helpNumbersText:"숫자 버튼을 눌러 선택한 칸을 채우세요.",helpTools:"버튼 안내",
+    helpPencil:"메모",helpPencilText:"메모 모드에서 가능한 숫자를 적어 둘 수 있습니다.",
+    helpHint:"힌트",helpHintText:"선택한 빈칸에 정답을 입력합니다(사용 횟수 제한).",
+    helpUndo:"실행 취소",helpUndoText:"가장 최근에 입력한 숫자를 되돌립니다.",
+    helpCheck:"확인",helpCheckText:"스도쿠 규칙에 어긋나는 칸을 강조합니다.",
+    helpSubmit:"제출",helpSubmitText:"완성한 퍼즐을 확인합니다.",
+    helpClear:"지우기 (×)",helpClearText:"선택한 칸의 입력을 지웁니다.",
+    helpTime:"시간 모드",helpTimeText:"원할 때 타이머를 시작하거나 일시정지할 수 있습니다.",
+    helpTip:"게임은 자동 저장됩니다. 설정에서 언어나 테마를 언제든지 변경하세요.",
+    closeHelp:"도움말 닫기",boardLabel:"스도쿠 퍼즐 격자",emptyCell:"빈칸",valueLabel:"{value}",cellLabel:"{row}행 {col}열, {value}",
+    welcomeTitle:"가볍게 두뇌를 깨워 볼까요?",welcomeText:"시작한 뒤 난이도와 모드를 선택하세요. 기록은 이 브라우저에만 저장됩니다.",
+    startGame:"새 게임 시작",resumeGame:"저장된 게임 이어하기",exitGame:"게임 나가기",recordsTitle:"게임 기록",
+    recordsLocal:"이 브라우저에만 저장됨",completedGames:"완료",totalPlayTime:"총 플레이 시간",bestRecord:"최고 기록",
+    exportRecords:"⇩ 게임 기록 내보내기 (PNG)",emptyRecords:"게임을 완료하면 기록이 여기에 표시됩니다.",scoreLabel:"점수",
+    recordTime:"시간",recordMode:"모드",recordDifficulty:"난이도",recordMistakes:"실수",practiceShort:"연습",timeShort:"타임",
+    exportDone:"PNG 기록 이미지를 다운로드했습니다.",exportFailed:"PNG 이미지를 만들 수 없습니다. 다시 시도하세요.",
+    scoreFormula:"점수 = 난이도 기본 점수 − 시간 감점 − 실수 감점 − 힌트 감점."
+  }
+};
+
+const LANGUAGE_KEY = "sudokuLanguage";
+const THEME_KEY = "sudokuTheme";
+let currentLanguage = ["en","zh-CN","ja","ko"].includes(localStorage.getItem(LANGUAGE_KEY))
+  ? localStorage.getItem(LANGUAGE_KEY) : "en";
+let currentTheme = localStorage.getItem(THEME_KEY) === "dark" ? "dark" : "light";
+function t(key, values = {}) {
+  return (translations[currentLanguage][key] || translations.en[key] || key)
+    .replace(/\{(\w+)\}/g,(_,name)=>values[name] ?? "");
+}
+function updateLanguage() {
+  document.documentElement.lang = currentLanguage;
+  document.querySelectorAll("[data-i18n]").forEach(el=>{
+    el.textContent = t(el.dataset.i18n);
+  });
+  document.querySelectorAll("[data-i18n-aria]").forEach(el=>{
+    const key = el.dataset.i18nAria;
+    el.setAttribute("aria-label", key === "enterNumber"
+      ? t(key,{number:el.dataset.num}) : t(key));
+  });
+  document.getElementById("languageSelect").value = currentLanguage;
+  updateThemeUI();
+  updateStatusUI();
+  renderStatsUI();
+  document.querySelectorAll(".cell").forEach(cell=>{
+    const row = Number(cell.dataset.row);
+    const col = Number(cell.dataset.col);
+    const value = boardData && boardData[row] ? boardData[row][col] : 0;
+    cell.setAttribute("aria-label",t("cellLabel",{
+      row:row+1,
+      col:col+1,
+      value:value !== 0 ? t("valueLabel",{value}) : t("emptyCell")
+    }));
+  });
+  timerTextEl.textContent = t("time",{time:timerRunning || timerStartTs ? formatTime(getCurrentTimerSeconds()) : "--:--"});
+  pencilBtn.textContent = noteMode ? t("pencilOn") : t("pencilOff");
+  pencilBtn.setAttribute("aria-pressed",String(noteMode));
+  showMsg("");
+}
+function updateThemeUI() {
+  document.documentElement.dataset.theme = currentTheme;
+  const switchEl = document.getElementById("themeSwitch");
+  switchEl.setAttribute("aria-checked",String(currentTheme === "dark"));
+  switchEl.setAttribute("aria-label",t(currentTheme === "dark" ? "switchToLight" : "switchToDark"));
+  document.getElementById("themeSwitchText").textContent = t(currentTheme);
+}
+
 // ========== 无限动态数独生成算法（挖洞+唯一解校验） ==========
 function isValid(grid, r, c, n) {
   for(let i=0;i<9;i++) if(grid[r][i]===n || grid[i][c]===n) return false;
@@ -424,9 +998,36 @@ let timerStartTs = null;
 let timerInterval = null;
 let timerPausedSeconds = 0;
 let timerRunning = false;
+let isGameActive = false;
+let gameStartedAt = null;
+let totalElapsedSeconds = 0;
+let gameRecords = [];
 
 // 历史统计 & 未完成对局缓存
-let gameStats = JSON.parse(localStorage.getItem("sudokuStats")||`{"fastest":null,"totalPlay":0,"starRec":0}`);
+function readLocalJson(key,fallback){
+  try{
+    const value = JSON.parse(localStorage.getItem(key));
+    return value ?? fallback;
+  }catch(error){
+    console.warn(`Could not read saved ${key}.`,error);
+    return fallback;
+  }
+}
+let gameStats = readLocalJson("sudokuStats",{fastest:null,totalPlay:0,starRec:0});
+if(!gameStats || typeof gameStats !== "object") gameStats = {fastest:null,totalPlay:0,starRec:0};
+gameStats = {
+  fastest:Number.isFinite(gameStats.fastest) ? gameStats.fastest : null,
+  totalPlay:Number.isFinite(gameStats.totalPlay) ? gameStats.totalPlay : 0,
+  starRec:Number.isFinite(gameStats.starRec) ? gameStats.starRec : 0
+};
+gameRecords = readLocalJson("sudokuGameRecords",[]);
+if(!Array.isArray(gameRecords)) gameRecords = [];
+gameRecords = gameRecords.filter(record=>record && typeof record === "object"
+  && Number.isFinite(record.durationSeconds)
+  && Number.isFinite(record.score)
+  && ["practice","time"].includes(record.mode)
+  && ["easy","medium","hard","expert","master","extreme"].includes(record.difficulty)
+  && Number.isFinite(Date.parse(record.completedAt)));
 const SAVE_GAME_KEY = "sudokuUnfinishedGame";
 
 const boardEl = document.getElementById("board");
@@ -435,6 +1036,19 @@ const hintBtn = document.getElementById("hintBtn");
 const undoBtn = document.getElementById("undoBtn");
 const checkBtn = document.getElementById("checkBtn");
 const submitBtn = document.getElementById("submitBtn");
+const exitGameBtn = document.getElementById("exitGameBtn");
+const startGameBtn = document.getElementById("startGameBtn");
+const resumeGameBtn = document.getElementById("resumeGameBtn");
+const startScreen = document.getElementById("startScreen");
+const activeGame = document.getElementById("activeGame");
+const gameControls = document.getElementById("gameControls");
+const recordListEl = document.getElementById("recordList");
+const completedCountEl = document.getElementById("completedCount");
+const totalDurationEl = document.getElementById("totalDuration");
+const bestRecordEl = document.getElementById("bestRecord");
+const exportRecordsBtn = document.getElementById("exportRecordsBtn");
+const recordsNoticeEl = document.getElementById("recordsNotice");
+const recordsPanelEl = document.getElementById("recordsPanel");
 const msgEl = document.getElementById("msg");
 const mistakeTextEl = document.getElementById("mistakeText");
 const hintTextEl = document.getElementById("hintText");
@@ -444,31 +1058,355 @@ const timeModeBtn = document.getElementById("timeModeBtn");
 const timerStartBtn = document.getElementById("timerStartBtn");
 const timerPauseBtn = document.getElementById("timerPauseBtn");
 
-const fastestValEl = document.getElementById("fastestVal");
-const totalPlayValEl = document.getElementById("totalPlayVal");
-const starRecordValEl = document.getElementById("starRecordVal");
-
 const resumeModal = document.getElementById("resumeModal");
 const continueBtn = document.getElementById("continueBtn");
 const restartBtn = document.getElementById("restartBtn");
+const helpDialog = document.getElementById("helpDialog");
+const helpButton = document.getElementById("helpButton");
+const helpClose = document.getElementById("helpClose");
+
+helpButton.addEventListener("click",()=>{
+  helpDialog.showModal();
+  helpClose.focus();
+});
+helpClose.addEventListener("click",()=>helpDialog.close());
+helpDialog.addEventListener("close",()=>helpButton.focus());
+
+document.getElementById("languageSelect").addEventListener("change",event=>{
+  currentLanguage = event.target.value;
+  localStorage.setItem(LANGUAGE_KEY,currentLanguage);
+  updateLanguage();
+});
+document.getElementById("themeSwitch").addEventListener("click",()=>{
+  currentTheme = currentTheme === "dark" ? "light" : "dark";
+  localStorage.setItem(THEME_KEY,currentTheme);
+  updateThemeUI();
+});
+startGameBtn.addEventListener("click",startFreshGame);
+resumeGameBtn.addEventListener("click",()=>resumeModal.classList.remove("hidden"));
+exitGameBtn.addEventListener("click",exitCurrentGame);
+exportRecordsBtn.addEventListener("click",exportGameRecords);
 
 function formatTime(secTotal){
   const m = Math.floor(secTotal/60);
   const s = secTotal % 60;
   return `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
 }
+function formatDuration(secTotal){
+  const total = Math.max(0,Math.floor(secTotal || 0));
+  const hours = Math.floor(total/3600);
+  const minutes = Math.floor((total%3600)/60);
+  const seconds = total%60;
+  return hours > 0
+    ? `${String(hours).padStart(2,"0")}:${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}`
+    : formatTime(total);
+}
+function getTotalElapsedSeconds(){
+  return totalElapsedSeconds + (gameStartedAt ? Math.floor((Date.now()-gameStartedAt)/1000) : 0);
+}
+function formatRecordDate(value){
+  return new Intl.DateTimeFormat(currentLanguage,{dateStyle:"medium"}).format(new Date(value));
+}
 function renderStatsUI(){
-  totalPlayValEl.textContent = gameStats.totalPlay;
-  starRecordValEl.textContent = gameStats.starRec;
-  fastestValEl.textContent = gameStats.fastest ? formatTime(gameStats.fastest) : "--:--";
+  const completed = gameRecords.length;
+  const totalSeconds = gameRecords.reduce((sum,record)=>sum+(record.durationSeconds || 0),0);
+  const bestSeconds = gameRecords.length
+    ? gameRecords.reduce((best,record)=>Math.min(best,record.durationSeconds || 0),Infinity) : null;
+  completedCountEl.textContent = String(completed);
+  totalDurationEl.textContent = formatDuration(totalSeconds);
+  bestRecordEl.textContent = bestSeconds === null ? "--:--" : formatDuration(bestSeconds);
+  recordListEl.replaceChildren();
+  if(gameRecords.length === 0){
+    const empty = document.createElement("p");
+    empty.className = "records-empty";
+    empty.textContent = t("emptyRecords");
+    recordListEl.appendChild(empty);
+    return;
+  }
+  [...gameRecords].reverse().forEach(record=>{
+    const entry = document.createElement("article");
+    entry.className = "record-entry";
+    const top = document.createElement("div");
+    top.className = "record-entry-top";
+    const title = document.createElement("strong");
+    title.textContent = `${t(record.difficulty)} · ${t(record.mode === "time" ? "timeShort" : "practiceShort")}`;
+    const date = document.createElement("span");
+    date.textContent = formatRecordDate(record.completedAt);
+    top.append(title,date);
+    const bottom = document.createElement("div");
+    bottom.className = "record-entry-bottom";
+    const duration = document.createElement("span");
+    duration.textContent = `${t("recordTime")}: ${formatDuration(record.durationSeconds)}`;
+    const score = document.createElement("span");
+    score.className = "record-score";
+    score.textContent = `${t("scoreLabel")}: ${record.score}`;
+    bottom.append(duration,score);
+    entry.append(top,bottom);
+    recordListEl.appendChild(entry);
+  });
 }
 function saveStats(){
   localStorage.setItem("sudokuStats",JSON.stringify(gameStats));
   renderStatsUI();
 }
+function saveGameRecords(){
+  localStorage.setItem("sudokuGameRecords",JSON.stringify(gameRecords));
+  renderStatsUI();
+}
+function scoreGame(durationSeconds){
+  const difficultyPoints = {easy:100,medium:150,hard:200,expert:250,master:300,extreme:350};
+  const hintsUsed = Math.max(0,3-hintRemain);
+  return Math.max(0,(difficultyPoints[currentDiff] || 100)
+    - Math.floor(durationSeconds/60)
+    - mistakeCount*10
+    - hintsUsed*15);
+}
+function showHome(){
+  isGameActive = false;
+  startScreen.classList.remove("hidden");
+  activeGame.classList.add("hidden");
+  gameControls.classList.add("hidden");
+  resumeGameBtn.classList.toggle("hidden",!getUnfinishedGame());
+  startGameBtn.textContent = t("startGame");
+}
+function showActiveGame(){
+  isGameActive = true;
+  startScreen.classList.add("hidden");
+  activeGame.classList.remove("hidden");
+  gameControls.classList.remove("hidden");
+}
+function startFreshGame(){
+  clearUnfinishedGame();
+  currentDiff = document.querySelector(".diff-item.active")?.dataset.diff || "easy";
+  const gen = generatePuzzle(currentDiff);
+  puzzle = gen.puzzle;
+  solution = gen.solution;
+  boardData = JSON.parse(JSON.stringify(puzzle));
+  historyStack = [];
+  mistakeCount = 0;
+  hintRemain = 3;
+  noteMode = false;
+  selectedCell=null;selectedRow=null;selectedCol=null;
+  isTimeMode = false;
+  timerStartTs = null;
+  timerPausedSeconds = 0;
+  timerRunning = false;
+  totalElapsedSeconds = 0;
+  gameStartedAt = Date.now();
+  practiceModeBtn.classList.add("active");
+  timeModeBtn.classList.remove("active");
+  document.querySelectorAll(".diff-item").forEach(item=>{
+    item.classList.toggle("active",item.dataset.diff === currentDiff);
+    item.setAttribute("aria-pressed",String(item.dataset.diff === currentDiff));
+  });
+  timerStartBtn.disabled = true;
+  timerPauseBtn.disabled = true;
+  pencilBtn.classList.remove("active");
+  pencilBtn.setAttribute("aria-pressed","false");
+  showActiveGame();
+  renderBoard();
+  showMsg(t("newPuzzle",{difficulty:t(currentDiff).toLowerCase()}));
+  saveUnfinishedGame();
+}
+function continueSavedGame(){
+  const unfinished = getUnfinishedGame();
+  if(!unfinished) return startFreshGame();
+  currentDiff = unfinished.currentDiff;
+  puzzle = unfinished.puzzle;
+  boardData = unfinished.boardData;
+  solution = unfinished.solution;
+  mistakeCount = unfinished.mistakeCount;
+  hintRemain = unfinished.hintRemain;
+  isTimeMode = unfinished.isTimeMode;
+  timerStartTs = unfinished.timerStartTs;
+  timerPausedSeconds = unfinished.timerPausedSeconds || 0;
+  timerRunning = unfinished.timerRunning || false;
+  historyStack = unfinished.historyStack || [];
+  totalElapsedSeconds = unfinished.totalElapsedSeconds || 0;
+  gameStartedAt = Date.now();
+  selectedCell=null;selectedRow=null;selectedCol=null;
+  document.querySelectorAll(".diff-item").forEach(item=>{
+    item.classList.toggle("active",item.dataset.diff === currentDiff);
+    item.setAttribute("aria-pressed",String(item.dataset.diff === currentDiff));
+  });
+  if(isTimeMode){
+    practiceModeBtn.classList.remove("active");
+    timeModeBtn.classList.add("active");
+    timerStartBtn.disabled = timerRunning;
+    timerPauseBtn.disabled = !timerRunning;
+    if(timerRunning){
+      const resumedTimerSeconds = getCurrentTimerSeconds();
+      const savedTimerSeconds = unfinished.timerElapsedSeconds ?? timerPausedSeconds;
+      totalElapsedSeconds += Math.max(0,resumedTimerSeconds-savedTimerSeconds);
+      timerPausedSeconds = resumedTimerSeconds;
+      timerStartTs = null;
+      timerRunning = false;
+    }
+  }else{
+    practiceModeBtn.classList.add("active");
+    timeModeBtn.classList.remove("active");
+  }
+  showActiveGame();
+  resetTimerUIForResume();
+  renderBoard();
+  if(isTimeMode && timerPausedSeconds > 0 && unfinished.timerRunning) startTimerLogic();
+  else if(isTimeMode) timerStartBtn.disabled = false;
+  saveUnfinishedGame();
+}
+function resetTimerUIForResume(){
+  stopTimer();
+  timerTextEl.textContent = t("time",{time:formatDuration(getCurrentTimerSeconds())});
+  timerStartBtn.disabled = !isTimeMode || timerRunning;
+  timerPauseBtn.disabled = !timerRunning;
+}
+function exitCurrentGame(){
+  if(!isGameActive) return;
+  if(timerRunning) pauseTimerLogic();
+  totalElapsedSeconds = getTotalElapsedSeconds();
+  gameStartedAt = null;
+  saveUnfinishedGame();
+  showHome();
+}
+function exportGameRecords(){
+  try{
+    const pixelRatio = 2;
+    const width = 1000;
+    const rowHeight = 92;
+    const height = Math.max(560,360+gameRecords.length*rowHeight);
+    const canvas = document.createElement("canvas");
+    canvas.width = width*pixelRatio;
+    canvas.height = height*pixelRatio;
+    const context = canvas.getContext("2d");
+    if(!context) throw new Error("Canvas is not supported.");
+    context.scale(pixelRatio,pixelRatio);
+    const styles = getComputedStyle(recordsPanelEl);
+    const colors = {
+      surface:styles.backgroundColor,
+      text:styles.color,
+      border:styles.borderColor,
+      soft:styles.getPropertyValue("--surface-soft").trim() || getComputedStyle(document.documentElement).getPropertyValue("--surface-soft").trim(),
+      muted:getComputedStyle(document.documentElement).getPropertyValue("--muted").trim(),
+      accent:getComputedStyle(document.documentElement).getPropertyValue("--accent").trim(),
+      page:getComputedStyle(document.documentElement).getPropertyValue("--page-bg").trim()
+    };
+    context.fillStyle=colors.page;
+    context.fillRect(0,0,width,height);
+    context.fillStyle=colors.surface;
+    context.strokeStyle=colors.border;
+    context.lineWidth=1;
+    roundedRect(context,32,32,width-64,height-64,20,true,true);
+    context.fillStyle=colors.text;
+    context.font="700 32px system-ui, sans-serif";
+    context.fillText(t("recordsTitle"),64,86);
+    context.fillStyle=colors.muted;
+    context.font="16px system-ui, sans-serif";
+    context.fillText(t("recordsLocal"),64,116);
+    context.fillStyle=colors.soft;
+    roundedRect(context,64,140,width-128,76,14,true,false);
+    const completed=gameRecords.length;
+    const totalSeconds=gameRecords.reduce((sum,record)=>sum+(record.durationSeconds||0),0);
+    const bestSeconds=completed
+      ? gameRecords.reduce((best,record)=>Math.min(best,record.durationSeconds||0),Infinity) : null;
+    context.fillStyle=colors.muted;
+    context.font="14px system-ui, sans-serif";
+    context.fillText(t("completedGames"),88,171);
+    context.fillText(t("totalPlayTime"),350,171);
+    context.fillText(t("bestRecord"),690,171);
+    context.fillStyle=colors.text;
+    context.font="700 22px system-ui, sans-serif";
+    context.fillText(String(completed),88,198);
+    context.fillText(formatDuration(totalSeconds),350,198);
+    context.fillText(bestSeconds === null ? "--:--" : formatDuration(bestSeconds),690,198);
+    context.fillStyle=colors.text;
+    context.font="700 18px system-ui, sans-serif";
+    context.fillText(t("scoreFormula"),64,256);
+    let top=280;
+    if(gameRecords.length===0){
+      context.fillStyle=colors.soft;
+      roundedRect(context,64,top,width-128,64,12,true,false);
+      context.fillStyle=colors.muted;
+      context.font="16px system-ui, sans-serif";
+      context.fillText(t("emptyRecords"),84,top+39);
+    }else{
+      [...gameRecords].reverse().forEach((record,index)=>{
+        const y=top+index*rowHeight;
+        context.fillStyle=colors.soft;
+        roundedRect(context,64,y,width-128,rowHeight-10,12,true,false);
+        context.fillStyle=colors.text;
+        context.font="700 17px system-ui, sans-serif";
+        context.fillText(`${t(record.difficulty)} · ${t(record.mode==="time" ? "timeShort" : "practiceShort")}`,84,y+27);
+        context.fillStyle=colors.muted;
+        context.font="13px system-ui, sans-serif";
+        context.fillText(formatRecordDate(record.completedAt),width-235,y+27);
+        context.fillText(`${t("recordTime")}: ${formatDuration(record.durationSeconds)}`,84,y+55);
+        context.fillText(`${t("recordMistakes")}: ${record.mistakes}`,310,y+55);
+        context.fillStyle=colors.accent;
+        context.font="700 15px system-ui, sans-serif";
+        context.fillText(`${t("scoreLabel")}: ${record.score}`,width-235,y+55);
+      });
+    }
+    canvas.toBlob(blob=>{
+      if(!blob){
+        recordsNoticeEl.textContent=t("exportFailed");
+        return;
+      }
+      const link=document.createElement("a");
+      link.href=URL.createObjectURL(blob);
+      link.download="sudoku-game-records.png";
+      link.click();
+      setTimeout(()=>URL.revokeObjectURL(link.href),1000);
+      recordsNoticeEl.textContent=t("exportDone");
+    },"image/png");
+  }catch(error){
+    console.error("Could not export Sudoku records.",error);
+    recordsNoticeEl.textContent=t("exportFailed");
+  }
+}
+function roundedRect(context,x,y,width,height,radius,fill,stroke){
+  context.beginPath();
+  context.moveTo(x+radius,y);
+  context.lineTo(x+width-radius,y);
+  context.quadraticCurveTo(x+width,y,x+width,y+radius);
+  context.lineTo(x+width,y+height-radius);
+  context.quadraticCurveTo(x+width,y+height,x+width-radius,y+height);
+  context.lineTo(x+radius,y+height);
+  context.quadraticCurveTo(x,y+height,x,y+height-radius);
+  context.lineTo(x,y+radius);
+  context.quadraticCurveTo(x,y,x+radius,y);
+  context.closePath();
+  if(fill) context.fill();
+  if(stroke) context.stroke();
+}
+function completeCurrentGame(){
+  if(isTimeMode && timerRunning) pauseTimerLogic();
+  const durationSeconds = getTotalElapsedSeconds();
+  const record = {
+    mode:isTimeMode ? "time" : "practice",
+    difficulty:currentDiff,
+    durationSeconds,
+    score:scoreGame(durationSeconds),
+    mistakes:mistakeCount,
+    hintsUsed:3-hintRemain,
+    completedAt:new Date().toISOString()
+  };
+  gameRecords.push(record);
+  saveGameRecords();
+  gameStats.totalPlay = (gameStats.totalPlay || 0)+1;
+  if(isTimeMode){
+    const usedSeconds = getCurrentTimerSeconds();
+    if(gameStats.fastest === null || usedSeconds < gameStats.fastest) gameStats.fastest = usedSeconds;
+    gameStats.starRec = (gameStats.starRec || 0)+1;
+  }
+  saveStats();
+  clearUnfinishedGame();
+  totalElapsedSeconds = durationSeconds;
+  gameStartedAt = null;
+  showHome();
+}
 
 // 对局缓存
 function saveUnfinishedGame(){
+  if(!puzzle || !boardData || !solution) return;
   const saveObj = {
     currentDiff,
     puzzle,
@@ -480,7 +1418,9 @@ function saveUnfinishedGame(){
     timerStartTs,
     timerPausedSeconds,
     timerRunning,
-    historyStack
+    timerElapsedSeconds:getCurrentTimerSeconds(),
+    historyStack,
+    totalElapsedSeconds:getTotalElapsedSeconds()
   };
   localStorage.setItem(SAVE_GAME_KEY, JSON.stringify(saveObj));
 }
@@ -490,7 +1430,16 @@ function clearUnfinishedGame(){
 function getUnfinishedGame(){
   const raw = localStorage.getItem(SAVE_GAME_KEY);
   if(!raw) return null;
-  try{ return JSON.parse(raw); }catch(e){ return null; }
+  try{
+    const saved = JSON.parse(raw);
+    const validGrid = grid=>Array.isArray(grid) && grid.length===9
+      && grid.every(row=>Array.isArray(row) && row.length===9);
+    return saved && typeof saved === "object"
+      && validGrid(saved.puzzle) && validGrid(saved.boardData) && validGrid(saved.solution)
+      ? saved : null;
+  }catch(e){
+    return null;
+  }
 }
 
 // 计时器控制
@@ -499,23 +1448,20 @@ function resetTimerUI(){
   timerStartTs = null;
   timerPausedSeconds = 0;
   timerRunning = false;
-  timerTextEl.textContent = "Time: --:--";
+  timerTextEl.textContent = t("time",{time:"--:--"});
   timerStartBtn.disabled = !isTimeMode;
   timerPauseBtn.disabled = true;
 }
 function startTimerLogic(){
   if(timerRunning) return;
-  if(!timerStartTs){
-    timerStartTs = Date.now();
-  }else{
-    timerStartTs = Date.now() - timerPausedSeconds*1000;
-  }
+  if(isGameActive && !gameStartedAt) gameStartedAt = Date.now();
+  timerStartTs = Date.now() - timerPausedSeconds*1000;
   timerRunning = true;
   timerStartBtn.disabled = true;
   timerPauseBtn.disabled = false;
   timerInterval = setInterval(()=>{
     const sec = Math.floor((Date.now() - timerStartTs)/1000);
-    timerTextEl.textContent = `Time: ${formatTime(sec)}`;
+    timerTextEl.textContent = t("time",{time:formatTime(sec)});
     saveUnfinishedGame();
   },1000);
 }
@@ -524,6 +1470,10 @@ function pauseTimerLogic(){
   timerPausedSeconds = Math.floor((Date.now()-timerStartTs)/1000);
   stopTimer();
   timerRunning = false;
+  if(gameStartedAt){
+    totalElapsedSeconds = getTotalElapsedSeconds();
+    gameStartedAt = null;
+  }
   timerStartBtn.disabled = false;
   timerPauseBtn.disabled = true;
   saveUnfinishedGame();
@@ -542,6 +1492,7 @@ function getCurrentTimerSeconds(){
 // 模式切换
 practiceModeBtn.addEventListener("click",()=>{
   isTimeMode = false;
+  if(isGameActive && !gameStartedAt) gameStartedAt = Date.now();
   practiceModeBtn.classList.add("active");
   timeModeBtn.classList.remove("active");
   resetTimerUI();
@@ -549,6 +1500,7 @@ practiceModeBtn.addEventListener("click",()=>{
 });
 timeModeBtn.addEventListener("click",()=>{
   isTimeMode = true;
+  if(isGameActive && !gameStartedAt) gameStartedAt = Date.now();
   practiceModeBtn.classList.remove("active");
   timeModeBtn.classList.add("active");
   timerStartBtn.disabled = false;
@@ -558,8 +1510,8 @@ timerStartBtn.addEventListener("click",startTimerLogic);
 timerPauseBtn.addEventListener("click",pauseTimerLogic);
 
 function updateStatusUI(){
-  mistakeTextEl.textContent = `Mistake: ${mistakeCount} /${MAX_MISTAKE}`;
-  hintTextEl.textContent = `Hint left: ${hintRemain}`;
+  mistakeTextEl.textContent = t("mistake",{count:mistakeCount,max:MAX_MISTAKE});
+  hintTextEl.textContent = t("hintLeft",{count:hintRemain});
 }
 function showMsg(text){ msgEl.textContent = text; }
 function saveSnapshot(){
@@ -568,22 +1520,33 @@ function saveSnapshot(){
   saveUnfinishedGame();
 }
 function undo(){
-  if(historyStack.length===0){ showMsg("Nothing to undo"); return; }
+  if(historyStack.length===0){ showMsg(t("nothingToUndo")); return; }
   boardData = historyStack.pop();
-  renderBoard(); showMsg("Undone");
+  renderBoard(); showMsg(t("undone"));
   saveUnfinishedGame();
 }
 
 function renderBoard(){
+  const restoreFocus = boardEl.contains(document.activeElement);
   boardEl.innerHTML = "";
   for(let r=0;r<9;r++){
+    const rowEl = document.createElement("div");
+    rowEl.className = "board-row";
+    rowEl.setAttribute("role","row");
     for(let c=0;c<9;c++){
       const div = document.createElement("div");
       div.className = "cell";
+      div.setAttribute("role","gridcell");
+      div.tabIndex = r === (selectedRow ?? 0) && c === (selectedCol ?? 0) ? 0 : -1;
       div.dataset.row = r;
       div.dataset.col = c;
       const origVal = puzzle[r][c];
       const currVal = boardData[r][c];
+      div.setAttribute("aria-label",t("cellLabel",{
+        row:r+1,
+        col:c+1,
+        value:currVal !== 0 ? t("valueLabel",{value:currVal}) : t("emptyCell")
+      }));
       if(origVal!==0){
         div.textContent = origVal;
         div.classList.add("given");
@@ -591,16 +1554,46 @@ function renderBoard(){
         div.textContent = currVal;
         div.classList.add("user-input");
       }
-      boardEl.appendChild(div);
-      div.addEventListener("click",()=>handleCellClick(div,r,c));
+      rowEl.appendChild(div);
+      div.addEventListener("click",()=>{
+        handleCellClick(div,r,c);
+        div.focus({preventScroll:true});
+      });
+      div.addEventListener("keydown",event=>{
+        const offsets = {ArrowUp:[-1,0],ArrowDown:[1,0],ArrowLeft:[0,-1],ArrowRight:[0,1]};
+        if(offsets[event.key]){
+          event.preventDefault();
+          const [dr,dc] = offsets[event.key];
+          const nextRow = Math.max(0,Math.min(8,r+dr));
+          const nextCol = Math.max(0,Math.min(8,c+dc));
+          const nextCell = boardEl.querySelector(`.cell[data-row="${nextRow}"][data-col="${nextCol}"]`);
+          handleCellClick(nextCell,nextRow,nextCol);
+          nextCell.focus();
+          return;
+        }
+        if(/^[1-9]$/.test(event.key) || event.key === "0" || event.key === "Backspace" || event.key === "Delete"){
+          event.preventDefault();
+          if(selectedCell !== div) handleCellClick(div,r,c);
+          const num = event.key === "Backspace" || event.key === "Delete" ? "0" : event.key;
+          document.querySelector(`.num-panel button[data-num="${num}"]`).click();
+        }
+      });
     }
+    boardEl.appendChild(rowEl);
   }
-  clearAllHighlight();
+  if(selectedRow !== null && selectedCol !== null){
+    selectedCell = boardEl.querySelector(`.cell[data-row="${selectedRow}"][data-col="${selectedCol}"]`);
+    handleCellClick(selectedCell,selectedRow,selectedCol);
+  }else{
+    selectedCell = null;
+    clearAllHighlight();
+  }
+  if(restoreFocus && selectedCell) selectedCell.focus({preventScroll:true});
   updateStatusUI();
 }
 function clearAllHighlight(){
   document.querySelectorAll(".cell").forEach(el=>{
-    el.classList.remove("selected","highlight-row","highlight-col","highlight-box","error");
+    el.classList.remove("selected","highlight-row","highlight-col","highlight-box","highlight-same-number","error");
   })
 }
 function handleCellClick(cellDom,r,c){
@@ -608,6 +1601,8 @@ function handleCellClick(cellDom,r,c){
   selectedCell = cellDom;
   selectedRow = r;
   selectedCol = c;
+  document.querySelectorAll(".cell").forEach(el=>el.tabIndex = -1);
+  cellDom.tabIndex = 0;
   cellDom.classList.add("selected");
   document.querySelectorAll(`.cell[data-row="${r}"]`).forEach(el=>el.classList.add("highlight-row"));
   document.querySelectorAll(`.cell[data-col="${c}"]`).forEach(el=>el.classList.add("highlight-col"));
@@ -620,26 +1615,34 @@ function handleCellClick(cellDom,r,c){
       document.querySelector(`.cell[data-row="${rr}"][data-col="${cc}"]`).classList.add("highlight-box");
     }
   }
+  const selectedValue = boardData[r][c];
+  if(selectedValue !== 0){
+    document.querySelectorAll(".cell").forEach(el=>{
+      if(Number(el.textContent) === selectedValue) el.classList.add("highlight-same-number");
+    });
+    cellDom.classList.add("selected");
+  }
 }
 
 hintBtn.addEventListener("click",()=>{
-  if(!selectedCell){ showMsg("Select a cell first"); return; }
-  if(hintRemain<=0){ showMsg("No hints left"); return; }
+  if(!selectedCell){ showMsg(t("selectCell")); return; }
+  if(hintRemain<=0){ showMsg(t("noHints")); return; }
   const r = selectedRow;
   const c = selectedCol;
-  if(puzzle[r][c]!==0){ showMsg("Cannot hint given cell"); return; }
+  if(puzzle[r][c]!==0){ showMsg(t("cannotHintGiven")); return; }
   saveSnapshot();
   boardData[r][c] = solution[r][c];
   hintRemain -=1;
   renderBoard();
-  showMsg("Hint applied");
+  showMsg(t("hintApplied"));
   saveUnfinishedGame();
 })
 
 pencilBtn.addEventListener("click",()=>{
   noteMode = !noteMode;
-  pencilBtn.textContent = noteMode ? "✏️ Pencil ON":"✏️ Pencil OFF";
+  pencilBtn.textContent = noteMode ? t("pencilOn") : t("pencilOff");
   pencilBtn.classList.toggle("active",noteMode);
+  pencilBtn.setAttribute("aria-pressed",String(noteMode));
 })
 undoBtn.addEventListener("click",undo);
 
@@ -649,7 +1652,7 @@ document.querySelectorAll(".num-panel button").forEach(btn=>{
     const num = Number(btn.dataset.num);
     const r = selectedRow;
     const c = selectedCol;
-    if(puzzle[r][c]!==0){ showMsg("Given cell cannot edit"); return; }
+    if(puzzle[r][c]!==0){ showMsg(t("givenCannotEdit")); return; }
     saveSnapshot();
     if(num===0){
       boardData[r][c]=0;
@@ -660,7 +1663,7 @@ document.querySelectorAll(".num-panel button").forEach(btn=>{
     if(!noteMode){
       if(num !== solution[r][c]){
         mistakeCount +=1;
-        if(mistakeCount >= MAX_MISTAKE) showMsg("Game over, too many mistakes");
+        if(mistakeCount >= MAX_MISTAKE) showMsg(t("gameOver"));
       }
       boardData[r][c]=num;
       renderBoard();
@@ -712,12 +1715,12 @@ checkBtn.addEventListener("click",()=>{
       }
     }
   }
-  showMsg(hasError?"❌ Conflicts found, check red cells":"✅ No conflicts detected");
+  showMsg(t(hasError ? "conflictsFound" : "noConflicts"));
 })
 
 submitBtn.addEventListener("click",()=>{
   for(let r=0;r<9;r++) for(let c=0;c<9;c++) if(boardData[r][c]===0){
-    showMsg("⚠️ Fill all cells before submit");
+    showMsg(t("fillBeforeSubmit"));
     return;
   }
   let ok = true;
@@ -737,28 +1740,23 @@ submitBtn.addEventListener("click",()=>{
     }
   }
   if(ok){
-    showMsg("🎉 Congratulations! Puzzle solved");
-    gameStats.totalPlay +=1;
-    if(isTimeMode){
-      pauseTimerLogic();
-      const usedSec = getCurrentTimerSeconds();
-      if(gameStats.fastest===null || usedSec < gameStats.fastest){
-        gameStats.fastest = usedSec;
-      }
-      gameStats.starRec +=1;
-    }
-    saveStats();
-    clearUnfinishedGame();
+    showMsg(t("solved"));
+    completeCurrentGame();
+    recordsNoticeEl.textContent=t("solved");
   }else{
-    showMsg("❌ Has conflicts, click Check to find errors");
+    showMsg(t("hasConflicts"));
   }
 })
 
 // 切换难度：动态生成新题
 document.querySelectorAll(".diff-item").forEach(el=>{
-  el.addEventListener("click",()=>{
-    document.querySelectorAll(".diff-item").forEach(x=>x.classList.remove("active"));
+  const selectDifficulty = ()=>{
+    document.querySelectorAll(".diff-item").forEach(x=>{
+      x.classList.remove("active");
+      x.setAttribute("aria-pressed","false");
+    });
     el.classList.add("active");
+    el.setAttribute("aria-pressed","true");
     currentDiff = el.dataset.diff;
     const gen = generatePuzzle(currentDiff);
     puzzle = gen.puzzle;
@@ -767,86 +1765,46 @@ document.querySelectorAll(".diff-item").forEach(el=>{
     historyStack = [];
     mistakeCount = 0;
     hintRemain = 3;
+    totalElapsedSeconds = 0;
+    gameStartedAt = Date.now();
     selectedCell=null;selectedRow=null;selectedCol=null;
     resetTimerUI();
     renderBoard();
-    showMsg(`New ${currentDiff} puzzle generated`);
+    showMsg(t("newPuzzle",{difficulty:t(currentDiff).toLowerCase()}));
     saveUnfinishedGame();
-  })
+  };
+  el.setAttribute("role","button");
+  el.setAttribute("aria-pressed",String(el.classList.contains("active")));
+  el.addEventListener("click",selectDifficulty);
+  el.addEventListener("keydown",event=>{
+    if(event.key === "Enter" || event.key === " "){
+      event.preventDefault();
+      selectDifficulty();
+    }
+  });
 })
 
 // 弹窗按钮
 continueBtn.addEventListener("click",()=>{
   resumeModal.classList.add("hidden");
-  renderBoard();
-  if(isTimeMode && timerRunning) startTimerLogic();
+  continueSavedGame();
 });
 restartBtn.addEventListener("click",()=>{
   resumeModal.classList.add("hidden");
-  clearUnfinishedGame();
-  currentDiff = "easy";
-  document.querySelectorAll(".diff-item").forEach(x=>x.classList.remove("active"));
-  document.querySelector('.diff-item[data-diff="easy"]').classList.add("active");
-  const gen = generatePuzzle(currentDiff);
-  puzzle = gen.puzzle;
-  solution = gen.solution;
-  boardData = JSON.parse(JSON.stringify(puzzle));
-  historyStack = [];
-  mistakeCount = 0;
-  hintRemain = 3;
-  selectedCell=null;selectedRow=null;selectedCol=null;
-  isTimeMode = false;
-  practiceModeBtn.classList.add("active");
-  timeModeBtn.classList.remove("active");
-  resetTimerUI();
-  renderBoard();
-  showMsg("New game started");
-  saveUnfinishedGame();
+  startFreshGame();
 });
 
 // 初始化
 function initGame(){
+  updateLanguage();
   const unfinished = getUnfinishedGame();
   if(unfinished){
-    resumeModal.classList.remove("hidden");
-    currentDiff = unfinished.currentDiff;
-    puzzle = unfinished.puzzle;
-    boardData = unfinished.boardData;
-    solution = unfinished.solution;
-    mistakeCount = unfinished.mistakeCount;
-    hintRemain = unfinished.hintRemain;
-    isTimeMode = unfinished.isTimeMode;
-    timerStartTs = unfinished.timerStartTs;
-    timerPausedSeconds = unfinished.timerPausedSeconds||0;
-    timerRunning = unfinished.timerRunning||false;
-    historyStack = unfinished.historyStack || [];
-
-    document.querySelectorAll(".diff-item").forEach(x=>x.classList.remove("active"));
-    document.querySelector(`.diff-item[data-diff="${currentDiff}"]`).classList.add("active");
-
-    if(isTimeMode){
-      practiceModeBtn.classList.remove("active");
-      timeModeBtn.classList.add("active");
-      timerStartBtn.disabled = timerRunning;
-      timerPauseBtn.disabled = !timerRunning;
-    }else{
-      practiceModeBtn.classList.add("active");
-      timeModeBtn.classList.remove("active");
-    }
-    const sec = getCurrentTimerSeconds();
-    timerTextEl.textContent = timerRunning ? `Time: ${formatTime(sec)}` : `Time: ${formatTime(sec)}`;
-  }else{
-    const gen = generatePuzzle(currentDiff);
-    puzzle = gen.puzzle;
-    solution = gen.solution;
-    boardData = JSON.parse(JSON.stringify(puzzle));
-    saveUnfinishedGame();
+    resumeGameBtn.classList.remove("hidden");
   }
-  renderBoard();
   renderStatsUI();
+  showHome();
 }
 initGame();
 </script>
 </body>
 </html>
-
