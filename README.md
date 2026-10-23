@@ -1,6 +1,8 @@
 # Sudoku‑Web
 > Pure‑frontend infinite‑generation Sudoku puzzle web app. Zero backend, single‑file, deployable on GitHub Pages.
 
+[📰 Latest Project Updates](./NEWS.md)
+
 [![HTML5](https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=white)](#)
 [![CSS3](https://img.shields.io/badge/CSS3-1572B6?logo=css3&logoColor=white)](#)
 [![JavaScript‑ES6+](https://img.shields.io/badge/JavaScript‑ES6%2B-F7DF1E?logo=javascript&logoColor=black)](#)
