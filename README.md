@@ -1,5 +1,5 @@
 # Sudoku‑Web
-> Pure‑frontend infinite‑generation Sudoku puzzle web app. Zero backend, single‑file, deployable on GitHub Pages
+> Pure‑frontend infinite‑generation Sudoku puzzle web app. Zero backend, single‑file, deployable on GitHub Pages.
 
 [📰 Latest Project Updates](./NEWS.md)
 
